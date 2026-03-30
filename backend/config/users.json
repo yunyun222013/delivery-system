@@ -1,0 +1,24 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "role": "管理员",
+      "description": "系统管理员"
+    },
+    {
+      "username": "user1",
+      "password": "user123",
+      "role": "普通用户",
+      "description": "团队成员1"
+    },
+    {
+      "username": "user2",
+      "password": "user123",
+      "role": "普通用户",
+      "description": "团队成员2"
+    }
+  ],
+  "session_expire_hours": 24,
+  "note": "可以添加更多用户，修改后重启系统生效"
+}
