@@ -23,7 +23,7 @@ HOLIDAY_TABLE_ID = os.getenv("HOLIDAY_TABLE_ID", "")
 PAUSE_TABLE_ID = os.getenv("PAUSE_TABLE_ID", "")
 
 # FastAPI应用
-app = FastAPI(title="配送管理系统API V2.1", version="2.1.0")
+app = FastAPI(title="配送管理系统API V2.3", version="2.3.0")
 
 # CORS配置
 app.add_middleware(
@@ -67,7 +67,7 @@ def verify_token(token: str) -> Optional[Dict]:
 def get_feishu_token():
     """获取飞书access token"""
     if not FEISHU_APP_ID or not FEISHU_APP_SECRET:
-        logger.error("❌ 飞书配置缺失")
+        logger.error("❌ 飞书配置缺失：FEISHU_APP_ID 或 FEISHU_APP_SECRET 未设置")
         return None
     
     url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
@@ -94,26 +94,31 @@ def get_feishu_token():
 def query_bitable_records(table_id: str, filter_condition: Dict = None):
     """查询多维表格记录"""
     if not BITABLE_APP_TOKEN or not table_id:
-        logger.error("❌ 配置缺失")
+        logger.error(f"❌ 配置缺失：BITABLE_APP_TOKEN={BITABLE_APP_TOKEN}, table_id={table_id}")
         return []
     
     token = get_feishu_token()
     if not token:
+        logger.error("❌ 无法获取飞书token")
         return []
     
     url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records/search"
-    headers = {"Authorization": f"Bearer {token}"}
-    data = {"automatic_fields": False}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {}
     if filter_condition:
-        data["filter"] = filter_condition
+        body["filter"] = filter_condition
     
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response = requests.post(url, headers=headers, json=body, timeout=30)
         result = response.json()
         
         if result.get("code") == 0:
             items = result.get("data", {}).get("items", [])
-            logger.info(f"✅ 查询成功，返回 {len(items)} 条记录")
+            logger.info(f"✅ 查询成功，获取 {len(items)} 条记录")
             return items
         else:
             logger.error(f"❌ 查询失败: {result}")
@@ -122,80 +127,102 @@ def query_bitable_records(table_id: str, filter_condition: Dict = None):
         logger.error(f"❌ 查询异常: {e}")
         return []
 
-def update_bitable_record(table_id: str, record_id: str, fields: Dict):
-    """更新多维表格记录"""
+def update_bitable_record(table_id: str, record_id: str, fields: Dict) -> tuple:
+    """更新多维表格记录，返回 (是否成功, 错误信息)"""
+    if not BITABLE_APP_TOKEN or not table_id or not record_id:
+        logger.error("❌ 配置缺失")
+        return False, "配置缺失"
+    
     token = get_feishu_token()
     if not token:
-        return False
+        return False, "无法获取飞书token"
     
     url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records/{record_id}"
-    headers = {"Authorization": f"Bearer {token}"}
-    data = {"fields": fields}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {"fields": fields}
     
     try:
-        response = requests.put(url, headers=headers, json=data, timeout=10)
+        response = requests.put(url, headers=headers, json=body, timeout=10)
         result = response.json()
         
         if result.get("code") == 0:
-            logger.info(f"✅ 更新记录成功")
-            return True
+            logger.info(f"✅ 更新成功")
+            return True, None
         else:
-            logger.error(f"❌ 更新记录失败: {result}")
-            return False
+            error_msg = result.get('msg', '未知错误')
+            logger.error(f"❌ 更新失败: {result}")
+            return False, error_msg
     except Exception as e:
-        logger.error(f"❌ 更新记录异常: {e}")
-        return False
+        logger.error(f"❌ 更新异常: {e}")
+        return False, str(e)
 
-def create_bitable_record(table_id: str, fields: Dict):
-    """创建多维表格记录"""
+def create_bitable_record(table_id: str, fields: Dict) -> tuple:
+    """创建多维表格记录，返回 (是否成功, 错误信息)"""
+    if not BITABLE_APP_TOKEN or not table_id:
+        logger.error("❌ 配置缺失")
+        return False, "配置缺失"
+    
     token = get_feishu_token()
     if not token:
-        return None
+        return False, "无法获取飞书token"
     
     url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records"
-    headers = {"Authorization": f"Bearer {token}"}
-    data = {"fields": fields}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {"fields": fields}
     
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response = requests.post(url, headers=headers, json=body, timeout=10)
         result = response.json()
         
         if result.get("code") == 0:
-            record = result.get("data", {}).get("record", {})
-            logger.info(f"✅ 创建记录成功")
-            return record
+            logger.info(f"✅ 创建成功")
+            return True, None
         else:
-            logger.error(f"❌ 创建记录失败: {result}")
-            return None
+            error_msg = result.get('msg', '未知错误')
+            logger.error(f"❌ 创建失败: {result}")
+            return False, error_msg
     except Exception as e:
-        logger.error(f"❌ 创建记录异常: {e}")
-        return None
+        logger.error(f"❌ 创建异常: {e}")
+        return False, str(e)
 
-def delete_bitable_records(table_id: str, record_ids: List[str]):
+def delete_bitable_records(table_id: str, record_ids: List[str]) -> bool:
     """批量删除多维表格记录"""
-    if not record_ids:
-        return True
+    if not BITABLE_APP_TOKEN or not table_id or not record_ids:
+        logger.error("❌ 配置缺失")
+        return False
     
     token = get_feishu_token()
     if not token:
         return False
     
     url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records/batch_delete"
-    headers = {"Authorization": f"Bearer {token}"}
-    data = {"records": record_ids}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {"records": record_ids}
     
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response = requests.post(url, headers=headers, json=body, timeout=10)
         result = response.json()
         
         if result.get("code") == 0:
-            logger.info(f"✅ 删除 {len(record_ids)} 条记录成功")
+            logger.info(f"✅ 删除成功")
             return True
         else:
-            logger.error(f"❌ 删除记录失败: {result}")
+            logger.error(f"❌ 删除失败: {result}")
             return False
     except Exception as e:
-        logger.error(f"❌ 删除记录异常: {e}")
+        logger.error(f"❌ 删除异常: {e}")
         return False
 
 # 辅助函数：解析日期
@@ -276,10 +303,13 @@ def get_customer_confirmed_delivery_count(customer_name: str) -> int:
     
     return total_count
 
-# 辅助函数：计算日期范围内的有效配送天数
+# 辅助函数：计算日期范围内的有效配送天数（包含起送日期当天）
 def calculate_valid_delivery_days(start_date: datetime, end_date: datetime, 
                                   pause_dates: List[datetime], holiday_dates: List[datetime]) -> int:
-    """计算从start_date到end_date的有效配送天数（排除暂停和假期）"""
+    """
+    计算从start_date到end_date的有效配送天数（排除暂停和假期）
+    注意：包含起送日期当天，因为起送日期当天已送一餐
+    """
     current_date = start_date
     valid_days = 0
     
@@ -305,21 +335,16 @@ def calculate_end_date_with_history(start_date: datetime, total_meals: int,
     1. 剩余餐数 = 总餐数 - 历史已确认配送数量
     2. 从今天开始，逐日累加，跳过暂停和假期，直到达到剩余餐数
     """
-    # 剩余需要配送的餐数
     remaining_meals = total_meals - confirmed_count
     
     if remaining_meals <= 0:
-        # 如果已经吃完或超出，返回今天
         return datetime.now()
     
-    # 从今天开始计算
     current_date = datetime.now()
     delivered_days = 0
     
     while delivered_days < remaining_meals:
-        # 检查是否是暂停日
         is_pause = any(pause.date() == current_date.date() for pause in pause_dates)
-        # 检查是否是假期
         is_holiday = any(holiday.date() == current_date.date() for holiday in holiday_dates)
         
         if not is_pause and not is_holiday:
@@ -333,7 +358,7 @@ def calculate_end_date_with_history(start_date: datetime, total_meals: int,
 # API接口
 @app.get("/")
 async def root():
-    return {"message": "配送管理系统API V2.1运行中", "version": "2.1.0"}
+    return {"message": "配送管理系统API V2.3运行中", "version": "2.3.0"}
 
 @app.get("/health")
 async def health():
@@ -341,26 +366,58 @@ async def health():
 
 @app.get("/api/diagnose")
 async def diagnose():
-    """诊断接口"""
+    """诊断接口 - 检查配置和数据"""
     diagnosis = {
         "timestamp": datetime.now().isoformat(),
-        "version": "2.1.0",
+        "version": "2.3.0",
         "env_config": {
             "FEISHU_APP_ID": "已配置" if FEISHU_APP_ID else "❌ 未配置",
             "FEISHU_APP_SECRET": "已配置" if FEISHU_APP_SECRET else "❌ 未配置",
-            "BITABLE_APP_TOKEN": BITABLE_APP_TOKEN if BITABLE_APP_TOKEN else "❌ 未配置",
-            "CUSTOMER_TABLE_ID": CUSTOMER_TABLE_ID if CUSTOMER_TABLE_ID else "❌ 未配置",
-            "DELIVERY_TABLE_ID": DELIVERY_TABLE_ID if DELIVERY_TABLE_ID else "❌ 未配置",
-            "HOLIDAY_TABLE_ID": HOLIDAY_TABLE_ID if HOLIDAY_TABLE_ID else "❌ 未配置",
-            "PAUSE_TABLE_ID": PAUSE_TABLE_ID if PAUSE_TABLE_ID else "❌ 未配置"
-        }
+            "BITABLE_APP_TOKEN": "已配置" if BITABLE_APP_TOKEN else "❌ 未配置",
+            "CUSTOMER_TABLE_ID": "已配置" if CUSTOMER_TABLE_ID else "❌ 未配置",
+            "DELIVERY_TABLE_ID": "已配置" if DELIVERY_TABLE_ID else "❌ 未配置",
+            "HOLIDAY_TABLE_ID": "已配置" if HOLIDAY_TABLE_ID else "❌ 未配置",
+            "PAUSE_TABLE_ID": "已配置" if PAUSE_TABLE_ID else "❌ 未配置"
+        },
+        "tests": {}
     }
     
+    # 测试飞书连接
     token = get_feishu_token()
-    diagnosis["feishu_connection"] = {
-        "status": "✅ 成功" if token else "❌ 失败",
-        "token_obtained": bool(token)
-    }
+    diagnosis["tests"]["feishu_token"] = "✅ 成功" if token else "❌ 失败"
+    
+    # 测试查询客户表并显示字段名
+    if token and CUSTOMER_TABLE_ID:
+        try:
+            customers = query_bitable_records(CUSTOMER_TABLE_ID)
+            diagnosis["tests"]["customer_table"] = f"✅ 成功查询到 {len(customers)} 个客户"
+            
+            # 显示第一个客户的所有字段名（用于确认字段名）
+            if customers:
+                first_customer = customers[0].get('fields', {})
+                diagnosis["tests"]["customer_fields"] = list(first_customer.keys())
+                diagnosis["tests"]["customer_sample"] = {
+                    k: str(v)[:50] for k, v in first_customer.items()
+                }
+        except Exception as e:
+            diagnosis["tests"]["customer_table"] = f"❌ 查询失败: {str(e)}"
+    else:
+        diagnosis["tests"]["customer_table"] = "⚠️ 跳过（配置缺失）"
+    
+    # 测试查询配送记录表并显示字段名
+    if token and DELIVERY_TABLE_ID:
+        try:
+            deliveries = query_bitable_records(DELIVERY_TABLE_ID)
+            diagnosis["tests"]["delivery_table"] = f"✅ 成功查询到 {len(deliveries)} 条配送记录"
+            
+            # 显示第一个配送记录的所有字段名
+            if deliveries:
+                first_delivery = deliveries[0].get('fields', {})
+                diagnosis["tests"]["delivery_fields"] = list(first_delivery.keys())
+        except Exception as e:
+            diagnosis["tests"]["delivery_table"] = f"❌ 查询失败: {str(e)}"
+    else:
+        diagnosis["tests"]["delivery_table"] = "⚠️ 跳过（配置缺失）"
     
     return diagnosis
 
@@ -369,31 +426,39 @@ async def login(request: Request):
     """用户登录"""
     try:
         data = await request.json()
-        username = data.get('username', '').strip()
-        password = data.get('password', '').strip()
+        username = data.get('username')
+        password = data.get('password')
         
         if not username or not password:
-            return {"success": False, "message": "用户名和密码不能为空"}
+            return {"success": False, "message": "请输入用户名和密码"}
         
-        user = get_user_info(username)
-        if not user or user['password'] != password:
-            return {"success": False, "message": "用户名或密码错误"}
+        user_info = get_user_info(username)
+        if not user_info:
+            return {"success": False, "message": "用户名不存在"}
         
+        if user_info['password'] != password:
+            return {"success": False, "message": "密码错误"}
+        
+        # 生成token
         token = secrets.token_urlsafe(32)
-        expire_hours = USERS_CONFIG.get('session_expire_hours', 24)
         SESSIONS[token] = {
             'username': username,
-            'role': user['role'],
-            'expire_time': datetime.now() + timedelta(hours=expire_hours)
+            'role': user_info['role'],
+            'expire_time': datetime.now() + timedelta(hours=24)
         }
+        
+        logger.info(f"✅ 用户登录成功: {username}")
         
         return {
             "success": True,
-            "message": "登录成功",
             "token": token,
-            "user": {"username": username, "role": user['role']}
+            "user": {
+                "username": username,
+                "role": user_info['role']
+            }
         }
     except Exception as e:
+        logger.error(f"❌ 登录失败: {e}")
         return {"success": False, "message": f"登录失败: {str(e)}"}
 
 @app.post("/api/logout")
@@ -402,7 +467,7 @@ async def logout(request: Request):
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
     if token in SESSIONS:
         del SESSIONS[token]
-    return {"success": True, "message": "已登出"}
+    return {"success": True, "message": "已退出登录"}
 
 @app.get("/api/verify")
 async def verify(request: Request):
@@ -411,7 +476,7 @@ async def verify(request: Request):
     session = verify_token(token)
     
     if not session:
-        return {"success": False, "message": "未登录或登录已过期"}
+        raise HTTPException(status_code=401, detail="未授权")
     
     return {
         "success": True,
@@ -431,10 +496,10 @@ async def run_workflow(request: Request):
         data = await request.json()
         workflow_type = data.get('workflow_type')
         delivery_date = data.get('delivery_date')
-        delivery_count = data.get('delivery_count', 1)  # 配送数量，默认为1
-        record_id = data.get('record_id')  # 配送记录ID
+        delivery_count = data.get('delivery_count', 1)
+        record_id = data.get('record_id')
         
-        logger.info(f"🚀 工作流 {workflow_type} 开始执行")
+        logger.info(f"🚀 工作流 {workflow_type} 开始执行 (用户: {session['username']})")
         
         if workflow_type == 'recalculate_eaten':
             return await recalculate_eaten_meals()
@@ -459,22 +524,25 @@ async def run_workflow(request: Request):
 
 async def recalculate_eaten_meals():
     """
-    重新计算已吃餐数
+    重新计算已知餐数（修正版）
     算法：
-    1. 基础天数 = 从起送日期到昨天（排除暂停和假期）
+    1. 基础天数 = 从起送日期到昨天（包含起送日期当天，排除暂停和假期）
     2. 历史累计 = 已确认配送记录的配送数量总和
-    3. 已吃餐数 = 基础天数 + 历史累计
+    3. 已知餐数 = 基础天数 + 历史累计
     """
     try:
         logger.info("=" * 60)
-        logger.info("开始计算初始已吃餐数...")
+        logger.info("开始计算已知餐数...")
         
         customers = query_bitable_records(CUSTOMER_TABLE_ID)
         if not customers:
-            return {"success": True, "message": "客户表为空", "data": {"debug_info": ["⚠️ 客户表为空"]}}
+            return {
+                "success": False,
+                "message": "查询客户数据失败",
+                "data": {"debug_info": ["❌ 无法查询到客户数据"]}
+            }
         
         holiday_dates = get_holiday_dates()
-        today = datetime.now().date()
         debug_info = []
         updated_count = 0
         error_count = 0
@@ -496,28 +564,33 @@ async def recalculate_eaten_meals():
                 # 获取客户暂停日期
                 pause_dates = get_customer_pause_dates(customer_name)
                 
-                # 1. 计算基础天数（起送日期到昨天）
+                # 1. 计算基础天数（起送日期到昨天，包含起送日期当天）
                 yesterday = datetime.now() - timedelta(days=1)
                 base_days = calculate_valid_delivery_days(start_date, yesterday, pause_dates, holiday_dates)
                 
                 # 2. 获取历史已确认配送记录累计
                 history_confirmed = get_customer_confirmed_delivery_count(customer_name)
                 
-                # 3. 计算总已吃餐数
+                # 3. 计算总已知餐数
                 total_eaten = base_days + history_confirmed
                 
                 # 不能超过总餐数
                 if total_eaten > total_meals:
                     total_eaten = total_meals
                 
-                # 更新记录
-                update_success = update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": total_eaten})
+                # 更新记录（尝试不同的字段名）
+                # 先尝试 "已知餐数"，如果失败再尝试 "已吃餐数"
+                update_success, error_msg = update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已知餐数": total_eaten})
+                
+                if not update_success:
+                    # 尝试备用字段名
+                    update_success, error_msg = update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": total_eaten})
                 
                 if update_success:
-                    debug_info.append(f"✅ {customer_name}: 基础{base_days}天 + 历史{history_confirmed}餐 = 已吃{total_eaten}餐")
+                    debug_info.append(f"✅ {customer_name}: 基础{base_days}天(含起送日) + 历史{history_confirmed}餐 = 已知{total_eaten}餐")
                     updated_count += 1
                 else:
-                    debug_info.append(f"❌ {customer_name}: 更新失败")
+                    debug_info.append(f"❌ {customer_name}: 更新失败 - {error_msg}")
                     error_count += 1
                     
             except Exception as e:
@@ -528,26 +601,22 @@ async def recalculate_eaten_meals():
         
         return {
             "success": True,
-            "message": f"已计算 {updated_count} 个客户的已吃餐数",
+            "message": f"已计算 {updated_count} 个客户的已知餐数",
             "data": {"debug_info": debug_info, "updated_count": updated_count}
         }
     except Exception as e:
+        logger.error(f"❌ 计算失败: {e}", exc_info=True)
         return {"success": False, "message": f"计算失败: {str(e)}"}
 
 async def recalculate_end_date():
-    """
-    重新计算预计结束日期（修正版）
-    算法：
-    1. 剩余餐数 = 总餐数 - 历史已确认配送数量累计
-    2. 从今天开始，逐日累加，跳过暂停和假期，直到达到剩余餐数
-    """
+    """重新计算预计结束日期"""
     try:
         logger.info("=" * 60)
         logger.info("开始重新计算预计结束日期...")
         
         customers = query_bitable_records(CUSTOMER_TABLE_ID)
         if not customers:
-            return {"success": True, "message": "客户表为空", "data": {"debug_info": ["⚠️ 客户表为空"]}}
+            return {"success": False, "message": "查询客户数据失败"}
         
         holiday_dates = get_holiday_dates()
         debug_info = []
@@ -573,19 +642,15 @@ async def recalculate_end_date():
                     error_count += 1
                     continue
                 
-                # 获取客户暂停日期
                 pause_dates = get_customer_pause_dates(customer_name)
-                
-                # 获取历史已确认配送数量累计
                 confirmed_count = get_customer_confirmed_delivery_count(customer_name)
                 
-                # 计算结束日期（考虑历史已确认配送数量）
                 end_date = calculate_end_date_with_history(
                     start_date, total_meals, confirmed_count, pause_dates, holiday_dates
                 )
                 
                 # 更新记录
-                update_success = update_bitable_record(
+                update_success, error_msg = update_bitable_record(
                     CUSTOMER_TABLE_ID, record_id, 
                     {"预计结束日期": end_date.strftime("%Y-%m-%d")}
                 )
@@ -597,7 +662,7 @@ async def recalculate_end_date():
                     )
                     updated_count += 1
                 else:
-                    debug_info.append(f"❌ {customer_name}: 更新失败")
+                    debug_info.append(f"❌ {customer_name}: 更新失败 - {error_msg}")
                     error_count += 1
                     
             except Exception as e:
@@ -615,14 +680,11 @@ async def recalculate_end_date():
         return {"success": False, "message": f"计算失败: {str(e)}"}
 
 async def update_delivery_count(record_id: str, delivery_count: int):
-    """
-    修改配送数量（仅限未确认的记录）
-    """
+    """修改配送数量（仅限未确认的记录）"""
     try:
         if not record_id:
             return {"success": False, "message": "缺少配送记录ID"}
         
-        # 查询配送记录
         delivery_records = query_bitable_records(DELIVERY_TABLE_ID)
         target_record = None
         
@@ -640,33 +702,24 @@ async def update_delivery_count(record_id: str, delivery_count: int):
         if is_confirmed:
             return {
                 "success": False,
-                "message": "该配送记录已确认，无法修改配送数量",
-                "data": {"debug_info": ["⚠️ 已确认的记录不可修改"]}
+                "message": "该配送记录已确认，无法修改配送数量"
             }
         
-        # 更新配送数量
-        update_success = update_bitable_record(DELIVERY_TABLE_ID, record_id, {"配送数量": delivery_count})
+        update_success, error_msg = update_bitable_record(DELIVERY_TABLE_ID, record_id, {"配送数量": delivery_count})
         
         if update_success:
             return {
                 "success": True,
-                "message": f"配送数量已更新为 {delivery_count}",
-                "data": {"debug_info": [f"✅ 配送数量更新成功"]}
+                "message": f"配送数量已更新为 {delivery_count}"
             }
         else:
-            return {"success": False, "message": "更新失败"}
+            return {"success": False, "message": f"更新失败: {error_msg}"}
             
     except Exception as e:
         return {"success": False, "message": f"更新失败: {str(e)}"}
 
 async def confirm_delivery(delivery_date: str):
-    """
-    批量确认配送记录
-    强制执行：
-    1. 必须有配送记录才能确认
-    2. 确认后无法修改配送数量
-    3. 确认后自动累加已吃餐数
-    """
+    """批量确认配送记录"""
     try:
         if not delivery_date:
             return {"success": False, "message": "请选择配送日期"}
@@ -674,7 +727,6 @@ async def confirm_delivery(delivery_date: str):
         logger.info("=" * 60)
         logger.info(f"开始确认配送日期: {delivery_date}")
         
-        # 查询该日期的配送记录
         filter_condition = {
             "conditions": [{
                 "field_name": "配送日期",
@@ -687,7 +739,7 @@ async def confirm_delivery(delivery_date: str):
         if not records:
             return {
                 "success": False,
-                "message": f"{delivery_date} 没有配送记录，请先生成配送记录",
+                "message": f"{delivery_date} 没有配送记录",
                 "data": {
                     "debug_info": [f"⚠️ 未找到 {delivery_date} 的配送记录"],
                     "tips": ["请先使用'生成配送记录'功能生成该日期的记录"]
@@ -705,17 +757,14 @@ async def confirm_delivery(delivery_date: str):
             is_confirmed = fields.get('是否已确认', False)
             delivery_qty = fields.get('配送数量', 1)
             
-            # 跳过已确认的记录
             if is_confirmed:
                 debug_info.append(f"⏭️ {customer_name}: 已确认过（配送{delivery_qty}份），跳过")
                 skipped_count += 1
                 continue
             
-            # 确认配送记录
-            update_success = update_bitable_record(DELIVERY_TABLE_ID, record_id, {"是否已确认": True})
+            update_success, error_msg = update_bitable_record(DELIVERY_TABLE_ID, record_id, {"是否已确认": True})
             
             if update_success:
-                # 累加客户的已吃餐数
                 customer_records = query_bitable_records(CUSTOMER_TABLE_ID, {
                     "conditions": [{
                         "field_name": "客户姓名",
@@ -728,29 +777,38 @@ async def confirm_delivery(delivery_date: str):
                     customer_record = customer_records[0]
                     customer_fields = customer_record.get('fields', {})
                     customer_record_id = customer_record.get('record_id')
-                    current_eaten = customer_fields.get('已吃餐数', 0)
+                    current_eaten = customer_fields.get('已知餐数', customer_fields.get('已吃餐数', 0))
                     
-                    update_bitable_record(
+                    # 尝试更新已知餐数字段
+                    update_success2, _ = update_bitable_record(
                         CUSTOMER_TABLE_ID,
                         customer_record_id,
-                        {"已吃餐数": current_eaten + delivery_qty}
+                        {"已知餐数": current_eaten + delivery_qty}
                     )
                     
+                    if not update_success2:
+                        # 尝试备用字段名
+                        update_bitable_record(
+                            CUSTOMER_TABLE_ID,
+                            customer_record_id,
+                            {"已吃餐数": current_eaten + delivery_qty}
+                        )
+                    
                     debug_info.append(
-                        f"✅ {customer_name}: 确认配送 {delivery_qty} 份，已吃餐数 {current_eaten} → {current_eaten + delivery_qty}"
+                        f"✅ {customer_name}: 确认配送 {delivery_qty} 份，已知餐数 {current_eaten} → {current_eaten + delivery_qty}"
                     )
                     confirmed_count += 1
                 else:
                     debug_info.append(f"⚠️ {customer_name}: 确认成功但找不到客户记录")
                     confirmed_count += 1
             else:
-                debug_info.append(f"❌ {customer_name}: 确认失败")
+                debug_info.append(f"❌ {customer_name}: 确认失败 - {error_msg}")
         
         logger.info(f"✅ 完成：确认 {confirmed_count} 个，跳过 {skipped_count} 个")
         
         return {
             "success": True,
-            "message": f"已确认 {delivery_date} 的 {confirmed_count} 条配送记录（跳过 {skipped_count} 条已确认）",
+            "message": f"已确认 {delivery_date} 的 {confirmed_count} 条配送记录",
             "data": {
                 "debug_info": debug_info,
                 "confirmed_count": confirmed_count,
@@ -762,12 +820,8 @@ async def confirm_delivery(delivery_date: str):
 
 async def generate_delivery_records(delivery_date: str):
     """
-    生成配送记录
-    特点：
-    1. 支持任意日期（未来或过去）
-    2. 每个日期独立生成
-    3. 自动删除该日期的旧记录
-    4. 默认配送数量为1
+    生成配送记录（完整版）
+    包含字段：配送日期、客户姓名、手机号、配送地址、忌口、加量、备注、配送数量、明天是否最后一天
     """
     try:
         if not delivery_date:
@@ -776,7 +830,7 @@ async def generate_delivery_records(delivery_date: str):
         logger.info("=" * 60)
         logger.info(f"开始生成配送记录: {delivery_date}")
         
-        # 1. 查询该日期已有的配送记录并删除
+        # 删除该日期的旧记录
         filter_condition = {
             "conditions": [{
                 "field_name": "配送日期",
@@ -791,15 +845,14 @@ async def generate_delivery_records(delivery_date: str):
             delete_bitable_records(DELIVERY_TABLE_ID, old_record_ids)
             logger.info(f"已删除 {len(old_records)} 条旧记录")
         
-        # 2. 查询所有客户
         customers = query_bitable_records(CUSTOMER_TABLE_ID)
         
         if not customers:
             return {"success": False, "message": "客户表为空，无法生成配送记录"}
         
-        # 获取公共假期和暂停日期
         holiday_dates = get_holiday_dates()
         selected_date = datetime.strptime(delivery_date, "%Y-%m-%d")
+        tomorrow = selected_date + timedelta(days=1)
         
         debug_info = []
         created_count = 0
@@ -811,12 +864,18 @@ async def generate_delivery_records(delivery_date: str):
             start_date = parse_date(fields.get('起送日期'))
             end_date = parse_date(fields.get('预计结束日期'))
             total_meals = fields.get('总餐数', 0)
-            eaten_meals = fields.get('已吃餐数', 0)
+            eaten_meals = fields.get('已知餐数', fields.get('已吃餐数', 0))
+            
+            # 从客户表获取其他字段
+            phone = fields.get('手机号', '')
+            address = fields.get('配送地址', '')
+            taboo = fields.get('忌口', '')
+            extra = fields.get('加量', '')
+            remark = fields.get('备注', '')
             
             if not customer_name:
                 continue
             
-            # 检查是否在配送范围内
             should_deliver = True
             skip_reason = ""
             
@@ -833,10 +892,7 @@ async def generate_delivery_records(delivery_date: str):
                 should_deliver = False
             
             if should_deliver:
-                # 检查是否是假期
                 is_holiday = any(h.date() == selected_date.date() for h in holiday_dates)
-                
-                # 检查是否是暂停日
                 pause_dates = get_customer_pause_dates(customer_name)
                 is_pause = any(p.date() == selected_date.date() for p in pause_dates)
                 
@@ -847,62 +903,66 @@ async def generate_delivery_records(delivery_date: str):
                     skip_reason = "该日期是暂停日"
                     skipped_count += 1
                 else:
-                    # 生成配送记录，默认配送数量为1
-                    record = create_bitable_record(DELIVERY_TABLE_ID, {
+                    # 判断明天是否是最后一天
+                    is_last_day = False
+                    if end_date and tomorrow.date() > end_date.date():
+                        is_last_day = True
+                    
+                    # 创建配送记录（包含所有字段）
+                    delivery_fields = {
                         "配送日期": delivery_date,
                         "客户姓名": customer_name,
-                        "配送数量": 1,  # 默认为1
+                        "手机号": phone,
+                        "配送地址": address,
+                        "忌口": taboo,
+                        "加量": extra,
+                        "备注": remark,
+                        "配送数量": 1,
+                        "明天是否最后一天": "是" if is_last_day else "否",
                         "是否已确认": False
-                    })
+                    }
                     
-                    if record:
-                        debug_info.append(f"✅ {customer_name}: 生成配送记录（配送数量默认为1，确认前可修改）")
+                    success, error_msg = create_bitable_record(DELIVERY_TABLE_ID, delivery_fields)
+                    
+                    if success:
+                        debug_info.append(f"✅ {customer_name}: 生成配送记录（默认1份，{'最后一天' if is_last_day else '非最后一天'}）")
                         created_count += 1
                     else:
-                        debug_info.append(f"❌ {customer_name}: 生成失败")
+                        debug_info.append(f"❌ {customer_name}: 创建失败 - {error_msg}")
+                        skipped_count += 1
             else:
-                debug_info.append(f"⏭️ {customer_name}: {skip_reason}，跳过")
+                debug_info.append(f"⏭️ {customer_name}: {skip_reason}")
                 skipped_count += 1
         
-        logger.info(f"✅ 完成：生成 {created_count} 条，跳过 {skipped_count} 个")
+        logger.info(f"✅ 完成：生成 {created_count} 条，跳过 {skipped_count} 条")
         
         return {
             "success": True,
-            "message": f"已生成 {delivery_date} 的 {created_count} 条配送记录（跳过 {skipped_count} 个客户）",
+            "message": f"已生成 {delivery_date} 的 {created_count} 条配送记录",
             "data": {
                 "debug_info": debug_info,
                 "created_count": created_count,
                 "skipped_count": skipped_count,
                 "tips": [
-                    "💡 配送数量默认为1",
-                    "💡 确认前可在飞书多维表格中修改配送数量",
-                    "💡 确认后配送数量将无法修改"
+                    "📋 配送记录已生成，默认配送数量为1",
+                    "✏️ 如需修改配送数量，请直接在飞书表格中修改",
+                    "✅ 修改完成后，点击'批量确认'锁定配送数量"
                 ]
             }
         }
     except Exception as e:
+        logger.error(f"❌ 生成失败: {e}", exc_info=True)
         return {"success": False, "message": f"生成失败: {str(e)}"}
 
 async def update_gantt_status():
-    """
-    更新甘特图状态数据
-    包含完整的时间线信息：
-    - 起送日期到结束日期
-    - 暂停日期详情
-    - 假期日期详情
-    - 每日配送记录
-    """
+    """更新甘特图状态"""
     try:
         logger.info("=" * 60)
         logger.info("开始更新甘特图状态...")
         
         customers = query_bitable_records(CUSTOMER_TABLE_ID)
-        
         if not customers:
-            return {"success": True, "message": "客户表为空", "data": {"debug_info": ["⚠️ 客户表为空"]}}
-        
-        # 获取所有假期
-        all_holidays = get_holiday_dates()
+            return {"success": False, "message": "客户表为空"}
         
         debug_info = []
         updated_count = 0
@@ -910,76 +970,71 @@ async def update_gantt_status():
         for customer in customers:
             fields = customer.get('fields', {})
             record_id = customer.get('record_id')
-            customer_name = fields.get('客户姓名', '未知')
+            customer_name = fields.get('客户姓名')
+            start_date = parse_date(fields.get('起送日期'))
+            end_date = parse_date(fields.get('预计结束日期'))
             
-            # 获取客户暂停日期
+            if not customer_name or not start_date:
+                continue
+            
             pause_dates = get_customer_pause_dates(customer_name)
+            holiday_dates = get_holiday_dates()
             
-            # 获取配送记录
-            delivery_records = query_bitable_records(DELIVERY_TABLE_ID, {
-                "conditions": [{
-                    "field_name": "客户姓名",
-                    "operator": "is",
-                    "value": [customer_name]
-                }]
-            })
-            
-            # 构建完整的甘特图数据
             gantt_data = {
-                "customer_name": customer_name,
-                "start_date": fields.get('起送日期'),
-                "end_date": fields.get('预计结束日期'),
-                "total_meals": fields.get('总餐数'),
-                "eaten_meals": fields.get('已吃餐数'),
-                "pause_dates": [p.strftime("%Y-%m-%d") for p in pause_dates],  # 暂停日期列表
-                "holiday_dates": [h.strftime("%Y-%m-%d") for h in all_holidays],  # 假期日期列表
-                "delivery_records": []
+                "start_date": start_date.strftime("%Y-%m-%d"),
+                "end_date": end_date.strftime("%Y-%m-%d") if end_date else "",
+                "pause_dates": [p.strftime("%Y-%m-%d") for p in pause_dates],
+                "holiday_dates": [h.strftime("%Y-%m-%d") for h in holiday_dates],
+                "daily_details": []
             }
             
-            # 整理配送记录
-            for record in delivery_records:
-                delivery_fields = record.get('fields', {})
-                delivery_date = delivery_fields.get('配送日期')
-                
-                # 解析配送日期
-                if isinstance(delivery_date, (int, float)):
-                    delivery_date_str = datetime.fromtimestamp(delivery_date / 1000).strftime("%Y-%m-%d")
-                else:
-                    delivery_date_str = delivery_date
-                
-                gantt_data["delivery_records"].append({
-                    "date": delivery_date_str,
-                    "count": delivery_fields.get('配送数量', 1),
-                    "confirmed": delivery_fields.get('是否已确认', False)
-                })
+            if end_date:
+                current_date = start_date
+                while current_date <= end_date:
+                    date_str = current_date.strftime("%Y-%m-%d")
+                    
+                    filter_condition = {
+                        "conditions": [{
+                            "field_name": "配送日期",
+                            "operator": "is",
+                            "value": [date_str]
+                        }]
+                    }
+                    delivery_records = query_bitable_records(DELIVERY_TABLE_ID, filter_condition)
+                    
+                    delivery_info = {
+                        "date": date_str,
+                        "is_pause": any(p.date() == current_date.date() for p in pause_dates),
+                        "is_holiday": any(h.date() == current_date.date() for h in holiday_dates),
+                        "delivery_count": 0,
+                        "is_confirmed": False
+                    }
+                    
+                    for record in delivery_records:
+                        r_fields = record.get('fields', {})
+                        if r_fields.get('客户姓名') == customer_name:
+                            delivery_info["delivery_count"] = r_fields.get('配送数量', 0)
+                            delivery_info["is_confirmed"] = r_fields.get('是否已确认', False)
+                            break
+                    
+                    gantt_data["daily_details"].append(delivery_info)
+                    current_date += timedelta(days=1)
             
-            # 按日期排序配送记录
-            gantt_data["delivery_records"].sort(key=lambda x: x["date"])
-            
-            # 更新甘特图字段
-            update_success = update_bitable_record(
-                CUSTOMER_TABLE_ID,
-                record_id,
+            update_success, error_msg = update_bitable_record(
+                CUSTOMER_TABLE_ID, record_id,
                 {"甘特图数据": json.dumps(gantt_data, ensure_ascii=False)}
             )
             
             if update_success:
-                debug_info.append(
-                    f"✅ {customer_name}: 甘特图数据已更新（含{len(pause_dates)}个暂停日，{len(gantt_data['delivery_records'])}条配送记录）"
-                )
+                debug_info.append(f"✅ {customer_name}: 甘特图数据已更新")
                 updated_count += 1
             else:
-                debug_info.append(f"❌ {customer_name}: 更新失败")
-        
-        logger.info(f"✅ 完成：更新 {updated_count} 个客户")
+                debug_info.append(f"❌ {customer_name}: 更新失败 - {error_msg}")
         
         return {
             "success": True,
-            "message": f"已更新 {updated_count} 个客户的甘特图状态",
-            "data": {
-                "debug_info": debug_info,
-                "updated_count": updated_count
-            }
+            "message": f"已更新 {updated_count} 个客户的甘特图数据",
+            "data": {"debug_info": debug_info, "updated_count": updated_count}
         }
     except Exception as e:
         return {"success": False, "message": f"更新失败: {str(e)}"}
@@ -987,39 +1042,28 @@ async def update_gantt_status():
 async def run_all_operations():
     """一键执行所有操作"""
     try:
-        logger.info("=" * 60)
-        logger.info("开始一键执行所有操作...")
-        
         results = []
         
-        # 1. 计算初始已吃餐数
         result1 = await recalculate_eaten_meals()
-        results.append(f"1️⃣ 计算已吃餐数: {result1['message']}")
+        results.append(f"1️⃣ 计算已知餐数: {result1['message']}")
         
-        # 2. 重新计算结束日期
         result2 = await recalculate_end_date()
         results.append(f"2️⃣ 计算结束日期: {result2['message']}")
         
-        # 3. 更新甘特图
         result3 = await update_gantt_status()
         results.append(f"3️⃣ 更新甘特图: {result3['message']}")
         
         return {
             "success": True,
-            "message": "一键执行所有操作完成",
+            "message": "所有操作已完成",
             "data": {
                 "debug_info": results,
-                "results": {
-                    "recalculate_eaten": result1,
-                    "recalculate_end_date": result2,
-                    "update_gantt": result3
-                }
+                "tips": ["建议每周一早上运行一次，全面更新所有数据"]
             }
         }
     except Exception as e:
-        return {"success": False, "message": f"一键执行失败: {str(e)}"}
+        return {"success": False, "message": f"执行失败: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
