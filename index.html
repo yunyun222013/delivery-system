@@ -142,7 +142,7 @@
         /* 主页面样式 */
         .main-container {
             display: none;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -153,6 +153,12 @@
         
         .login-container.hidden {
             display: none;
+        }
+        
+        body.main-page {
+            display: block;
+            align-items: initial;
+            justify-content: initial;
         }
         
         header {
@@ -213,9 +219,21 @@
         
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         .card {
@@ -636,6 +654,7 @@
         function showLoginPage() {
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('mainPage').classList.remove('active');
+            document.body.classList.remove('main-page');
             localStorage.removeItem('auth_token');
             localStorage.removeItem('current_user');
         }
@@ -644,6 +663,7 @@
         function showMainPage() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainPage').classList.add('active');
+            document.body.classList.add('main-page');
             document.getElementById('currentUser').textContent = CURRENT_USER;
         }
         
@@ -931,7 +951,7 @@
         
         // 支持回车登录
         document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && document.getElementById('loginPage').style.display !== 'none') {
+            if (e.key === 'Enter' && !document.getElementById('loginPage').classList.contains('hidden')) {
                 login();
             }
         });
