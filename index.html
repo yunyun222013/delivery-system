@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配送管理系统 V2 - 操作面板</title>
+    <title>配送管理系统 V2 - 登录</title>
     <style>
         * {
             margin: 0;
@@ -15,12 +15,144 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
         }
         
-        .container {
+        /* 登录页面样式 */
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .login-container h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .login-container .version {
+            text-align: center;
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .login-container .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .login-container label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .login-container input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .login-container input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+        }
+        
+        .api-config {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .api-config h3 {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .api-config input {
+            font-size: 0.9em;
+            padding: 10px;
+        }
+        
+        .api-status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            text-align: center;
+        }
+        
+        .api-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .api-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* 主页面样式 */
+        .main-container {
+            display: none;
             max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .main-container.active {
+            display: block;
+        }
+        
+        .login-container.hidden {
+            display: none;
         }
         
         header {
@@ -37,6 +169,38 @@
         header p {
             font-size: 1.2em;
             opacity: 0.9;
+        }
+        
+        .user-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        
+        .user-info span {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #f8d7da;
         }
         
         .section-title {
@@ -80,6 +244,13 @@
             color: #666;
             margin-bottom: 15px;
             line-height: 1.6;
+        }
+        
+        .card ul {
+            color: #666;
+            margin-bottom: 15px;
+            padding-left: 20px;
+            line-height: 1.8;
         }
         
         .input-group {
@@ -163,16 +334,6 @@
             box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
         }
         
-        .btn-danger {
-            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-            color: white;
-        }
-        
-        .btn-danger:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(235, 51, 73, 0.4);
-        }
-        
         .result {
             margin-top: 15px;
             padding: 15px;
@@ -214,10 +375,6 @@
             color: white;
             margin-top: 40px;
             opacity: 0.8;
-        }
-        
-        .icon {
-            font-size: 1.2em;
         }
         
         .step-number {
@@ -262,7 +419,47 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 登录页面 -->
+    <div class="login-container" id="loginPage">
+        <h1>🍱 配送管理系统</h1>
+        <p class="version">V2.0 - 智能计算 + 自动累计</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="input-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" placeholder="请输入用户名" autocomplete="username">
+        </div>
+        
+        <div class="input-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+        </div>
+        
+        <button class="login-btn" onclick="login()" id="loginBtn">登录</button>
+        
+        <div class="api-config">
+            <h3>🔧 后端API配置</h3>
+            <div class="input-group">
+                <input type="text" id="apiUrl" placeholder="输入后端API地址，如：https://xxx.onrender.com">
+            </div>
+            <button onclick="saveApiUrl()" style="padding: 10px; font-size: 0.9em; margin-top: 5px;">保存API地址</button>
+            <div class="api-status" id="apiStatus" style="display: none;"></div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center; color: #999; font-size: 0.85em;">
+            <p>默认账号：admin / admin123</p>
+            <p>其他账号：user1 / user123</p>
+        </div>
+    </div>
+    
+    <!-- 主操作页面 -->
+    <div class="main-container" id="mainPage">
+        <div class="user-info">
+            欢迎，<span id="currentUser"></span>
+            <button class="logout-btn" onclick="logout()">退出</button>
+        </div>
+        
         <header>
             <h1>🍱 配送管理系统 V2</h1>
             <p>智能计算 + 自动累计 + 甘特图可视化</p>
@@ -275,7 +472,7 @@
             <div class="card">
                 <h2><span class="step-number">1</span> 计算已知餐数（含历史累计）</h2>
                 <p>自动计算所有客户的已吃餐数：</p>
-                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                <ul>
                     <li>✅ 基础天数（起送日期到昨天，排除暂停和假期）</li>
                     <li>✅ 加上历史已确认配送数量累计</li>
                     <li>✅ 自动记忆每次送2份的情况</li>
@@ -291,7 +488,7 @@
             <div class="card">
                 <h2><span class="step-number">2</span> 重新计算结束日期</h2>
                 <p>根据以下数据自动计算预计结束日期：</p>
-                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                <ul>
                     <li>✅ 总餐数</li>
                     <li>✅ 起送日期</li>
                     <li>✅ 暂停日期</li>
@@ -299,7 +496,7 @@
                     <li>✅ 已确认配送数量</li>
                 </ul>
                 <div class="tips-box">
-                    💡 <strong>独立计算</strong>：不依赖已吃餐数字段，完全重新计算
+                    💡 <strong>独立计算</strong>：剩余餐数 = 总餐数 - 历史已确认配送数量
                 </div>
                 <button class="btn-info" onclick="recalculateEndDate()">重新计算结束日期</button>
                 <div id="recalculateEndDateResult" class="result"></div>
@@ -309,7 +506,7 @@
             <div class="card">
                 <h2><span class="step-number">3</span> 批量确认今日餐数（强制）</h2>
                 <p>确认指定日期的配送记录，并自动累加已吃餐数：</p>
-                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                <ul>
                     <li>⚠️ 必须先生成配送记录</li>
                     <li>✅ 确认后自动累加已吃餐数</li>
                     <li>✅ 已确认的不会重复计算</li>
@@ -333,7 +530,7 @@
             <div class="card">
                 <h2><span class="step-number">4</span> 生成配送记录</h2>
                 <p>为指定日期生成配送记录：</p>
-                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                <ul>
                     <li>✅ 支持任意日期（未来或过去）</li>
                     <li>✅ 自动删除该日期的旧记录</li>
                     <li>✅ 每个日期独立生成</li>
@@ -354,11 +551,11 @@
             <div class="card">
                 <h2><span class="step-number">5</span> 一键执行所有操作</h2>
                 <p>按顺序自动执行以下操作：</p>
-                <ol style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                <ul>
                     <li>计算已知餐数（含历史累计）</li>
                     <li>重新计算结束日期</li>
                     <li>更新甘特图状态</li>
-                </ol>
+                </ul>
                 <div class="info-box">
                     📌 <strong>推荐频率</strong>：每周一早上运行一次，全面更新所有数据
                 </div>
@@ -370,7 +567,7 @@
             <div class="card">
                 <h2><span class="step-number">6</span> 更新甘特图状态</h2>
                 <p>为每位客户生成完整的甘特图数据：</p>
-                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                <ul>
                     <li>✅ 起送日期到结束日期</li>
                     <li>✅ 暂停日期标记</li>
                     <li>✅ 假期日期标记</li>
@@ -386,14 +583,187 @@
         
         <div class="footer">
             <p>💡 提示：生成配送记录前，请确保客户订单表中的"起送日期"已正确填写（年份不要填错）</p>
-            <p>📞 版本 V2.0 - 支持历史累计、独立计算、强制确认</p>
+            <p>📞 版本 V2.1 - 支持历史累计、独立计算、强制确认</p>
         </div>
     </div>
     
     <script>
-        // API基础地址（需要配置）
-        let API_URL = localStorage.getItem('api_url') || 'http://localhost:8080';
+        // 全局变量
+        let API_URL = localStorage.getItem('api_url') || '';
         let AUTH_TOKEN = localStorage.getItem('auth_token') || '';
+        let CURRENT_USER = localStorage.getItem('current_user') || '';
+        
+        // 页面加载时检查登录状态
+        window.onload = function() {
+            setDefaultDates();
+            checkLoginStatus();
+            
+            // 如果有保存的API地址，显示
+            if (API_URL) {
+                document.getElementById('apiUrl').value = API_URL;
+            }
+        };
+        
+        // 检查登录状态
+        async function checkLoginStatus() {
+            if (!AUTH_TOKEN || !API_URL) {
+                showLoginPage();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/verify`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${AUTH_TOKEN}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    CURRENT_USER = result.user.username;
+                    showMainPage();
+                } else {
+                    showLoginPage();
+                }
+            } catch (error) {
+                showLoginPage();
+            }
+        }
+        
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('mainPage').classList.remove('active');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('current_user');
+        }
+        
+        // 显示主页面
+        function showMainPage() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('mainPage').classList.add('active');
+            document.getElementById('currentUser').textContent = CURRENT_USER;
+        }
+        
+        // 登录
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (!username || !password) {
+                errorMessage.textContent = '请输入用户名和密码';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            if (!API_URL) {
+                errorMessage.textContent = '请先配置后端API地址';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    AUTH_TOKEN = result.token;
+                    CURRENT_USER = result.user.username;
+                    localStorage.setItem('auth_token', AUTH_TOKEN);
+                    localStorage.setItem('current_user', CURRENT_USER);
+                    showMainPage();
+                } else {
+                    errorMessage.textContent = result.message || '登录失败';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = '登录失败：' + error.message;
+                errorMessage.style.display = 'block';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        }
+        
+        // 登出
+        async function logout() {
+            try {
+                await fetch(`${API_URL}/api/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${AUTH_TOKEN}`
+                    }
+                });
+            } catch (error) {
+                console.error('登出失败:', error);
+            }
+            
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('current_user');
+            AUTH_TOKEN = '';
+            CURRENT_USER = '';
+            showLoginPage();
+        }
+        
+        // 保存API地址
+        function saveApiUrl() {
+            const url = document.getElementById('apiUrl').value.trim();
+            const statusDiv = document.getElementById('apiStatus');
+            
+            if (!url) {
+                statusDiv.textContent = '请输入API地址';
+                statusDiv.className = 'api-status error';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            // 移除末尾斜杠
+            const cleanUrl = url.replace(/\/$/, '');
+            
+            localStorage.setItem('api_url', cleanUrl);
+            API_URL = cleanUrl;
+            
+            // 测试连接
+            testApiConnection(cleanUrl);
+        }
+        
+        // 测试API连接
+        async function testApiConnection(url) {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.textContent = '正在测试连接...';
+            statusDiv.className = 'api-status';
+            statusDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch(`${url}/health`);
+                const result = await response.json();
+                
+                if (result.status === 'ok') {
+                    statusDiv.textContent = '✅ 后端连接成功！';
+                    statusDiv.className = 'api-status success';
+                } else {
+                    statusDiv.textContent = '❌ 后端响应异常';
+                    statusDiv.className = 'api-status error';
+                }
+            } catch (error) {
+                statusDiv.textContent = '❌ 连接失败：' + error.message;
+                statusDiv.className = 'api-status error';
+            }
+        }
         
         // 设置默认日期
         function setDefaultDates() {
@@ -404,8 +774,11 @@
             const todayStr = today.toISOString().split('T')[0];
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
             
-            document.getElementById('generateDate').value = tomorrowStr;
-            document.getElementById('confirmDate').value = todayStr;
+            const generateDateInput = document.getElementById('generateDate');
+            const confirmDateInput = document.getElementById('confirmDate');
+            
+            if (generateDateInput) generateDateInput.value = tomorrowStr;
+            if (confirmDateInput) confirmDateInput.value = todayStr;
         }
         
         // 调用工作流API
@@ -445,6 +818,13 @@
                     html += '<details><summary>📋 详细信息</summary>';
                     html += data.data.debug_info.map(info => `<div>${info}</div>`).join('');
                     html += '</details>';
+                }
+                
+                if (data.data && data.data.tips) {
+                    html += '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #155724;">';
+                    html += '<strong>💡 提示：</strong><br>';
+                    html += data.data.tips.map(tip => `<div>${tip}</div>`).join('');
+                    html += '</div>';
                 }
                 
                 resultDiv.innerHTML = html;
@@ -549,10 +929,12 @@
             }
         }
         
-        // 页面加载时设置默认日期
-        window.onload = function() {
-            setDefaultDates();
-        };
+        // 支持回车登录
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.getElementById('loginPage').style.display !== 'none') {
+                login();
+            }
+        });
     </script>
 </body>
 </html>
