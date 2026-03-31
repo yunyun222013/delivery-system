@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配送管理系统 V2 - 操作面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .section-title {
+            color: white;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-warning:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-info:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(235, 51, 73, 0.4);
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .result details {
+            margin-top: 10px;
+        }
+        
+        .result summary {
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+        
+        .icon {
+            font-size: 1.2em;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .tips-box {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .info-box {
+            background: #d1ecf1;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .error-box {
+            background: #f8d7da;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍱 配送管理系统 V2</h1>
+            <p>智能计算 + 自动累计 + 甘特图可视化</p>
+        </header>
+        
+        <!-- 上边：计算相关 -->
+        <div class="section-title">📊 数据计算（日常操作）</div>
+        <div class="grid">
+            <!-- 1. 计算初始已吃餐数 -->
+            <div class="card">
+                <h2><span class="step-number">1</span> 计算已知餐数（含历史累计）</h2>
+                <p>自动计算所有客户的已吃餐数：</p>
+                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                    <li>✅ 基础天数（起送日期到昨天，排除暂停和假期）</li>
+                    <li>✅ 加上历史已确认配送数量累计</li>
+                    <li>✅ 自动记忆每次送2份的情况</li>
+                </ul>
+                <div class="tips-box">
+                    💡 <strong>触发时机</strong>：修改客户暂停表/假期表后，或需要重新校准数据时
+                </div>
+                <button class="btn-warning" onclick="recalculateEaten()">计算已知餐数（含历史累计）</button>
+                <div id="recalculateEatenResult" class="result"></div>
+            </div>
+            
+            <!-- 2. 重新计算结束日期 -->
+            <div class="card">
+                <h2><span class="step-number">2</span> 重新计算结束日期</h2>
+                <p>根据以下数据自动计算预计结束日期：</p>
+                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                    <li>✅ 总餐数</li>
+                    <li>✅ 起送日期</li>
+                    <li>✅ 暂停日期</li>
+                    <li>✅ 假期日期</li>
+                    <li>✅ 已确认配送数量</li>
+                </ul>
+                <div class="tips-box">
+                    💡 <strong>独立计算</strong>：不依赖已吃餐数字段，完全重新计算
+                </div>
+                <button class="btn-info" onclick="recalculateEndDate()">重新计算结束日期</button>
+                <div id="recalculateEndDateResult" class="result"></div>
+            </div>
+            
+            <!-- 3. 批量确认今日餐数 -->
+            <div class="card">
+                <h2><span class="step-number">3</span> 批量确认今日餐数（强制）</h2>
+                <p>确认指定日期的配送记录，并自动累加已吃餐数：</p>
+                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                    <li>⚠️ 必须先生成配送记录</li>
+                    <li>✅ 确认后自动累加已吃餐数</li>
+                    <li>✅ 已确认的不会重复计算</li>
+                </ul>
+                <div class="input-group">
+                    <label for="confirmDate">确认日期：</label>
+                    <input type="date" id="confirmDate" value="">
+                </div>
+                <div class="error-box">
+                    ⚠️ <strong>强制执行</strong>：生成明天配送记录前，必须先确认今天的配送
+                </div>
+                <button class="btn-success" onclick="confirmDelivery()">批量确认配送</button>
+                <div id="confirmResult" class="result"></div>
+            </div>
+        </div>
+        
+        <!-- 下边：生成和更新 -->
+        <div class="section-title">🚀 生成记录（按需操作）</div>
+        <div class="grid">
+            <!-- 4. 生成配送记录 -->
+            <div class="card">
+                <h2><span class="step-number">4</span> 生成配送记录</h2>
+                <p>为指定日期生成配送记录：</p>
+                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                    <li>✅ 支持任意日期（未来或过去）</li>
+                    <li>✅ 自动删除该日期的旧记录</li>
+                    <li>✅ 每个日期独立生成</li>
+                    <li>✅ 自动排除暂停和假期</li>
+                </ul>
+                <div class="input-group">
+                    <label for="generateDate">配送日期：</label>
+                    <input type="date" id="generateDate" value="">
+                </div>
+                <div class="info-box">
+                    📌 <strong>使用提示</strong>：输入明天日期，建议先生成再确认
+                </div>
+                <button class="btn-primary" onclick="generateRecords()">生成配送记录</button>
+                <div id="generateResult" class="result"></div>
+            </div>
+            
+            <!-- 5. 一键执行所有操作 -->
+            <div class="card">
+                <h2><span class="step-number">5</span> 一键执行所有操作</h2>
+                <p>按顺序自动执行以下操作：</p>
+                <ol style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                    <li>计算已知餐数（含历史累计）</li>
+                    <li>重新计算结束日期</li>
+                    <li>更新甘特图状态</li>
+                </ol>
+                <div class="info-box">
+                    📌 <strong>推荐频率</strong>：每周一早上运行一次，全面更新所有数据
+                </div>
+                <button class="btn-success" onclick="runAll()">一键执行所有操作</button>
+                <div id="runAllResult" class="result"></div>
+            </div>
+            
+            <!-- 6. 更新甘特图状态 -->
+            <div class="card">
+                <h2><span class="step-number">6</span> 更新甘特图状态</h2>
+                <p>为每位客户生成完整的甘特图数据：</p>
+                <ul style="color: #666; margin-bottom: 15px; padding-left: 20px; line-height: 1.8;">
+                    <li>✅ 起送日期到结束日期</li>
+                    <li>✅ 暂停日期标记</li>
+                    <li>✅ 假期日期标记</li>
+                    <li>✅ 每日配送数量</li>
+                </ul>
+                <div class="info-box">
+                    📌 <strong>数据来源</strong>：从配送记录中汇总
+                </div>
+                <button class="btn-primary" onclick="updateGantt()">更新甘特图状态</button>
+                <div id="updateGanttResult" class="result"></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>💡 提示：生成配送记录前，请确保客户订单表中的"起送日期"已正确填写（年份不要填错）</p>
+            <p>📞 版本 V2.0 - 支持历史累计、独立计算、强制确认</p>
+        </div>
+    </div>
+    
+    <script>
+        // API基础地址（需要配置）
+        let API_URL = localStorage.getItem('api_url') || 'http://localhost:8080';
+        let AUTH_TOKEN = localStorage.getItem('auth_token') || '';
+        
+        // 设置默认日期
+        function setDefaultDates() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const todayStr = today.toISOString().split('T')[0];
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            
+            document.getElementById('generateDate').value = tomorrowStr;
+            document.getElementById('confirmDate').value = todayStr;
+        }
+        
+        // 调用工作流API
+        async function callWorkflow(workflowType, deliveryDate = null) {
+            const url = `${API_URL}/run`;
+            const body = {
+                workflow_type: workflowType
+            };
+            
+            if (deliveryDate) {
+                body.delivery_date = deliveryDate;
+            }
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${AUTH_TOKEN}`
+                },
+                body: JSON.stringify(body)
+            });
+            
+            return await response.json();
+        }
+        
+        // 显示结果
+        function showResult(elementId, data) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.style.display = 'block';
+            
+            if (data.success) {
+                resultDiv.className = 'result success';
+                
+                let html = `<strong>✅ 成功</strong><br>${data.message}<br>`;
+                
+                if (data.data && data.data.debug_info) {
+                    html += '<details><summary>📋 详细信息</summary>';
+                    html += data.data.debug_info.map(info => `<div>${info}</div>`).join('');
+                    html += '</details>';
+                }
+                
+                resultDiv.innerHTML = html;
+            } else {
+                resultDiv.className = 'result error';
+                let html = `<strong>❌ 失败</strong><br>${data.message || '未知错误'}`;
+                
+                if (data.data && data.data.tips) {
+                    html += '<br><div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #721c24;">';
+                    html += '<strong>💡 解决建议：</strong><br>';
+                    html += data.data.tips.map(tip => `<div>${tip}</div>`).join('');
+                    html += '</div>';
+                }
+                
+                resultDiv.innerHTML = html;
+            }
+        }
+        
+        // 显示加载中
+        function showLoading(elementId) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.innerHTML = '<strong>⏳ 正在执行...</strong><br>请稍候，可能需要10-30秒';
+        }
+        
+        // 1. 计算已知餐数
+        async function recalculateEaten() {
+            showLoading('recalculateEatenResult');
+            try {
+                const result = await callWorkflow('recalculate_eaten');
+                showResult('recalculateEatenResult', result);
+            } catch (error) {
+                showResult('recalculateEatenResult', { success: false, message: error.message });
+            }
+        }
+        
+        // 2. 重新计算结束日期
+        async function recalculateEndDate() {
+            showLoading('recalculateEndDateResult');
+            try {
+                const result = await callWorkflow('recalculate_end_date');
+                showResult('recalculateEndDateResult', result);
+            } catch (error) {
+                showResult('recalculateEndDateResult', { success: false, message: error.message });
+            }
+        }
+        
+        // 3. 批量确认配送
+        async function confirmDelivery() {
+            const date = document.getElementById('confirmDate').value;
+            if (!date) {
+                alert('请选择配送日期');
+                return;
+            }
+            
+            showLoading('confirmResult');
+            try {
+                const result = await callWorkflow('confirm', date);
+                showResult('confirmResult', result);
+            } catch (error) {
+                showResult('confirmResult', { success: false, message: error.message });
+            }
+        }
+        
+        // 4. 生成配送记录
+        async function generateRecords() {
+            const date = document.getElementById('generateDate').value;
+            if (!date) {
+                alert('请选择配送日期');
+                return;
+            }
+            
+            showLoading('generateResult');
+            try {
+                const result = await callWorkflow('generate', date);
+                showResult('generateResult', result);
+            } catch (error) {
+                showResult('generateResult', { success: false, message: error.message });
+            }
+        }
+        
+        // 5. 一键执行所有操作
+        async function runAll() {
+            showLoading('runAllResult');
+            try {
+                const result = await callWorkflow('run_all');
+                showResult('runAllResult', result);
+            } catch (error) {
+                showResult('runAllResult', { success: false, message: error.message });
+            }
+        }
+        
+        // 6. 更新甘特图
+        async function updateGantt() {
+            showLoading('updateGanttResult');
+            try {
+                const result = await callWorkflow('update_gantt');
+                showResult('updateGanttResult', result);
+            } catch (error) {
+                showResult('updateGanttResult', { success: false, message: error.message });
+            }
+        }
+        
+        // 页面加载时设置默认日期
+        window.onload = function() {
+            setDefaultDates();
+        };
+    </script>
+</body>
+</html>
