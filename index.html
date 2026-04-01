@@ -3,697 +3,714 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配送管理系统 V2.2</title>
+    <title>🍱 配送管理系统 V3.1</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
         }
         
         /* 登录页面 */
-        .login-container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-            width: 100%;
+        .login-body { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
         }
-        
-        .login-container h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2em;
+        .login-container { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+            max-width: 420px; 
+            width: 100%; 
         }
-        
-        .login-container .version {
-            text-align: center;
-            color: #999;
-            margin-bottom: 30px;
-            font-size: 0.9em;
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header h1 { font-size: 2em; color: #667eea; margin-bottom: 10px; }
+        .login-header p { color: #666; font-size: 0.95em; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+        .form-group input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            font-size: 1em; 
         }
-        
-        .login-container .input-group {
-            margin-bottom: 20px;
+        .form-group input:focus { 
+            outline: none; 
+            border-color: #667eea; 
         }
-        
-        .login-container label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
+        .login-btn { 
+            width: 100%; 
+            padding: 14px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1em; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-top: 10px; 
         }
-        
-        .login-container input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
+        .login-btn:hover { transform: translateY(-2px); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error-msg { 
+            color: #e74c3c; 
+            background: #fde8e8; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            font-size: 0.9em; 
+            display: none; 
         }
-        
-        .login-container input:focus {
-            outline: none;
-            border-color: #667eea;
+        .success-msg { 
+            color: #27ae60; 
+            background: #e8f5e9; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            font-size: 0.9em; 
+            display: none; 
         }
-        
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+        .config-section { 
+            margin-top: 30px; 
+            padding-top: 20px; 
+            border-top: 1px solid #e0e0e0; 
         }
-        
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        .config-section h3 { color: #667eea; margin-bottom: 15px; font-size: 1em; }
+        .config-section input { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            font-size: 0.9em; 
+            margin-bottom: 10px; 
         }
-        
-        .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: none;
-            text-align: center;
-        }
-        
-        .api-config {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .api-config h3 {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-        
-        .api-config input {
-            font-size: 0.9em;
-            padding: 10px;
-        }
-        
-        .api-status {
-            margin-top: 10px;
-            padding: 8px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            text-align: center;
-        }
-        
-        .api-status.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .api-status.error {
-            background: #f8d7da;
-            color: #721c24;
+        .config-btn { 
+            width: 100%; 
+            padding: 10px; 
+            background: #11998e; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 0.9em; 
+            font-weight: 600; 
+            cursor: pointer; 
         }
         
         /* 主页面 */
-        .main-container {
-            display: none;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .main-body { padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { 
+            text-align: center; 
+            color: white; 
+            margin-bottom: 30px; 
+            padding: 20px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 15px; 
         }
+        header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        header p { font-size: 1.1em; opacity: 0.95; }
         
-        .main-container.active {
-            display: block;
-        }
-        
-        .login-container.hidden {
-            display: none;
-        }
-        
-        body.main-page {
-            display: block;
-            align-items: initial;
-            justify-content: initial;
-        }
-        
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
-        
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        header p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-        
-        .user-info {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-        }
-        
-        .user-info span {
-            color: #667eea;
-            font-weight: 600;
-        }
-        
-        .logout-btn {
-            background: none;
-            border: none;
-            color: #dc3545;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-left: 10px;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-        
-        .logout-btn:hover {
-            background: #f8d7da;
-        }
-        
-        .section-title {
-            color: white;
-            font-size: 1.5em;
-            margin: 30px 0 15px 0;
-            padding-left: 10px;
-            border-left: 4px solid rgba(255, 255, 255, 0.5);
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        @media (max-width: 1200px) {
-            .grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .card {
+        /* 工作流程卡片 */
+        .workflow-card {
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-        }
-        
-        .card h2 {
+        .workflow-card h2 {
             color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-size: 1.5em;
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
-        .card p {
-            color: #666;
-            margin-bottom: 15px;
-            line-height: 1.6;
+        /* 流程步骤 */
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
         }
-        
-        .card ul {
-            color: #666;
-            margin-bottom: 15px;
-            padding-left: 20px;
-            line-height: 1.8;
-        }
-        
-        .input-group {
-            margin-bottom: 15px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-        
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }
-        
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        button {
-            width: 100%;
+        .flow-step {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
             padding: 15px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            position: relative;
+            border-left: 4px solid #667eea;
         }
-        
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .btn-primary {
+        .flow-step-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .flow-step h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        .flow-step p {
+            color: #666;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        .flow-step-code {
+            background: rgba(0,0,0,0.05);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8em;
+            color: #e74c3c;
+            display: inline-block;
+            margin-top: 8px;
         }
         
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        /* 分隔线 */
+        .section-divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
         }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255,255,255,0.3);
+        }
+        .section-divider span {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-        }
-        
-        .btn-success:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-        }
-        
-        .btn-warning:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
-        }
-        
-        .btn-info {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-        
-        .btn-info:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
-        }
-        
-        .result {
-            margin-top: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .result.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .result.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .result.loading {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .result details {
-            margin-top: 10px;
-        }
-        
-        .result summary {
-            cursor: pointer;
+            padding: 8px 20px;
+            border-radius: 20px;
+            position: relative;
             font-weight: 600;
         }
         
-        .footer {
-            text-align: center;
-            color: white;
-            margin-top: 40px;
-            opacity: 0.8;
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        .card { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            transition: transform 0.3s ease; 
+            position: relative; 
+        }
+        .card::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            height: 4px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card h2 { 
+            color: #667eea; 
+            margin-bottom: 15px; 
+            font-size: 1.3em; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .card h2 .step-badge { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+        }
+        .card p { color: #666; margin-bottom: 20px; line-height: 1.6; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+        .input-group input[type="date"] { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            font-size: 1em; 
         }
         
-        .step-number {
-            background: #667eea;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9em;
-            font-weight: bold;
+        .tip-box { 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            font-size: 0.9em; 
+            display: flex; 
+            align-items: flex-start; 
+            gap: 10px; 
+        }
+        .tip-box.warning { background: #fff8e1; border-left: 4px solid #ffa726; }
+        .tip-box.info { background: #e3f2fd; border-left: 4px solid #42a5f5; }
+        .tip-box.success { background: #e8f5e9; border-left: 4px solid #66bb6a; }
+        .tip-box.danger { background: #ffebee; border-left: 4px solid #ef5350; }
+        
+        button { 
+            width: 100%; 
+            padding: 15px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1em; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-primary { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+        }
+        .btn-success { 
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+            color: white; 
+        }
+        .btn-warning { 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+            color: white; 
+        }
+        .btn-info { 
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+            color: white; 
         }
         
-        .tips-box {
-            background: #fff3cd;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            border-left: 4px solid #ffc107;
+        .result { margin-top: 15px; padding: 15px; border-radius: 8px; display: none; }
+        .result.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .result.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .result.loading { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        
+        .footer { 
+            text-align: center; 
+            color: white; 
+            margin-top: 30px; 
+            padding: 20px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 15px; 
+        }
+        .footer p { margin: 5px 0; opacity: 0.95; }
+        
+        .user-info { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            background: white; 
+            padding: 12px 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            font-size: 0.9em; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            z-index: 1000; 
+        }
+        .user-avatar { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+        }
+        .logout-btn { 
+            background: #e74c3c; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            font-size: 0.9em; 
+            font-weight: 600; 
         }
         
-        .info-box {
-            background: #d1ecf1;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            border-left: 4px solid #17a2b8;
+        .status-indicator { 
+            display: inline-block; 
+            width: 10px; 
+            height: 10px; 
+            border-radius: 50%; 
+            animation: pulse 2s infinite; 
         }
+        .status-indicator.online { background: #66bb6a; }
+        .status-indicator.offline { background: #ef5350; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        .error-box {
-            background: #f8d7da;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .success-box {
-            background: #d4edda;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            border-left: 4px solid #28a745;
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .flow-steps { grid-template-columns: 1fr; }
+            .user-info { 
+                position: static; 
+                margin-bottom: 20px; 
+                border-radius: 15px; 
+            }
         }
     </style>
 </head>
-<body>
+<body class="login-body" id="body">
     <!-- 登录页面 -->
-    <div class="login-container" id="loginPage">
-        <h1>🍱 配送管理系统</h1>
-        <p class="version">V2.2 - 智能计算 + 历史累计</p>
-        
-        <div class="error-message" id="errorMessage"></div>
-        
-        <div class="input-group">
-            <label for="username">用户名</label>
-            <input type="text" id="username" placeholder="请输入用户名" autocomplete="username">
-        </div>
-        
-        <div class="input-group">
-            <label for="password">密码</label>
-            <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
-        </div>
-        
-        <button class="login-btn" onclick="login()" id="loginBtn">登录</button>
-        
-        <div class="api-config">
-            <h3>🔧 后端API配置</h3>
-            <div class="input-group">
-                <input type="text" id="apiUrl" placeholder="输入后端API地址，如：https://xxx.onrender.com">
+    <div id="loginPage">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>🍱 配送管理系统</h1>
+                <p>请输入账号密码登录</p>
             </div>
-            <button onclick="saveApiUrl()" style="padding: 10px; font-size: 0.9em; margin-top: 5px;">保存API地址</button>
-            <div class="api-status" id="apiStatus" style="display: none;"></div>
-        </div>
-        
-        <div style="margin-top: 20px; text-align: center; color: #999; font-size: 0.85em;">
-            <p>默认账号：admin / admin123</p>
-            <p>其他账号：user1 / user123</p>
+            
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="success-msg" id="successMsg"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">👤 用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名" required autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">🔑 密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" required autocomplete="current-password">
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">登录</button>
+            </form>
+            
+            <div class="config-section" id="configSection" style="display: none;">
+                <h3>⚙️ API配置（管理员设置）</h3>
+                <input type="text" id="apiUrlInput" placeholder="例如：https://your-api.render.com">
+                <button class="config-btn" onclick="saveApiUrl()">保存API地址</button>
+            </div>
         </div>
     </div>
     
-    <!-- 主操作页面 -->
-    <div class="main-container" id="mainPage">
-        <div class="user-info">
-            欢迎，<span id="currentUser"></span>
-            <button class="logout-btn" onclick="logout()">退出</button>
+    <!-- 主页面 -->
+    <div id="mainPage" style="display: none;">
+        <div class="user-info" id="userInfo">
+            <span class="status-indicator online"></span>
+            <div class="user-avatar" id="userAvatar">A</div>
+            <div>
+                <div style="font-weight: 600;" id="userName">管理员</div>
+                <div style="font-size: 0.85em; color: #666;" id="userRole">管理员</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">登出</button>
         </div>
-        
-        <header>
-            <h1>🍱 配送管理系统 V2.2</h1>
-            <p>智能计算 + 历史累计 + 甘特图可视化</p>
-        </header>
-        
-        <!-- 上边：计算相关 -->
-        <div class="section-title">📊 数据计算（日常操作）</div>
-        <div class="grid">
-            <!-- 1. 计算初始已吃餐数 -->
-            <div class="card">
-                <h2><span class="step-number">1</span> 计算已知餐数（含历史累计）</h2>
-                <p>自动计算所有客户的已吃餐数：</p>
-                <ul>
-                    <li>✅ 基础天数（起送日期到昨天，排除暂停和假期）</li>
-                    <li>✅ 加上历史已确认配送数量累计</li>
-                    <li>✅ 自动记忆每次送2份的情况</li>
-                </ul>
-                <div class="tips-box">
-                    💡 <strong>触发时机</strong>：修改客户暂停表/假期表后，或需要重新校准数据时
+
+        <div class="container">
+            <header>
+                <h1>🍱 配送管理系统 V3.1</h1>
+                <p>吃餐日历双轨制管理</p>
+            </header>
+            
+            <!-- 新用户流程 -->
+            <div class="workflow-card">
+                <h2>📋 新用户初始化流程（仅首次）</h2>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <h3>填写客户信息</h3>
+                        <p>在飞书表格中填写：客户姓名、手机号、配送地址、起送日期、总餐数等基础信息</p>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <h3>更新暂停表/假期表</h3>
+                        <p>如果有暂停日期或公共假期，在对应表格中填写</p>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">3</div>
+                        <h3>生成吃餐日历</h3>
+                        <p>点击下方"生成吃餐日历"按钮，系统自动为过去日期填充默认值</p>
+                        <span class="flow-step-code">重要！</span>
+                    </div>
                 </div>
-                <button class="btn-warning" onclick="recalculateEaten()">计算已知餐数（含历史累计）</button>
-                <div id="recalculateEatenResult" class="result"></div>
             </div>
             
-            <!-- 2. 重新计算结束日期 -->
-            <div class="card">
-                <h2><span class="step-number">2</span> 重新计算结束日期</h2>
-                <p>根据以下数据自动计算预计结束日期：</p>
-                <ul>
-                    <li>✅ 总餐数</li>
-                    <li>✅ 起送日期</li>
-                    <li>✅ 暂停日期</li>
-                    <li>✅ 假期日期</li>
-                    <li>✅ 已确认配送数量</li>
-                </ul>
-                <div class="tips-box">
-                    💡 <strong>独立计算</strong>：剩余餐数 = 总餐数 - 历史已确认配送数量
+            <!-- 第一天流程 -->
+            <div class="workflow-card">
+                <h2>🌟 第一天开始使用（仅首次）</h2>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <h3>生成今天的配送记录</h3>
+                        <p>选择今天的日期，点击"生成配送记录"，所有记录状态为"未确认"</p>
+                        <span class="flow-step-code">早上操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <h3>在飞书表格中检查</h3>
+                        <p>打开配送记录表，检查/修改配送数量（此时仍可修改）</p>
+                        <span class="flow-step-code">白天操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">3</div>
+                        <h3>批量确认今天的记录</h3>
+                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">4</div>
+                        <h3>生成明天的配送记录</h3>
+                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
                 </div>
-                <button class="btn-info" onclick="recalculateEndDate()">重新计算结束日期</button>
-                <div id="recalculateEndDateResult" class="result"></div>
             </div>
             
-            <!-- 3. 批量确认今日餐数 -->
-            <div class="card">
-                <h2><span class="step-number">3</span> 批量确认配送记录</h2>
-                <p>确认指定日期的配送记录，并自动累加已吃餐数：</p>
-                <ul>
-                    <li>✅ 确认后自动累加已吃餐数</li>
-                    <li>✅ 已确认的不会重复计算</li>
-                    <li>✅ 确认后配送数量锁定</li>
-                </ul>
-                <div class="input-group">
-                    <label for="confirmDate">确认日期：</label>
-                    <input type="date" id="confirmDate" value="">
+            <!-- 每日操作流程 -->
+            <div class="workflow-card">
+                <h2>🔄 每日操作流程（第二天及之后）</h2>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <h3>批量确认今天的配送记录</h3>
+                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <h3>生成明天的配送记录</h3>
+                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
                 </div>
-                <div class="error-box">
-                    ⚠️ <strong>操作流程</strong>：先生成配送记录 → 在飞书表格修改配送数量（如需）→ 确认配送
-                </div>
-                <button class="btn-success" onclick="confirmDelivery()">批量确认配送</button>
-                <div id="confirmResult" class="result"></div>
-            </div>
-        </div>
-        
-        <!-- 下边：生成和更新 -->
-        <div class="section-title">🚀 生成记录（按需操作）</div>
-        <div class="grid">
-            <!-- 4. 生成配送记录 -->
-            <div class="card">
-                <h2><span class="step-number">4</span> 生成配送记录</h2>
-                <p>为指定日期生成配送记录：</p>
-                <ul>
-                    <li>✅ 支持任意日期（未来或过去）</li>
-                    <li>✅ 自动删除该日期的旧记录</li>
-                    <li>✅ 每个日期独立生成</li>
-                    <li>✅ 自动排除暂停和假期</li>
-                </ul>
-                <div class="input-group">
-                    <label for="generateDate">配送日期：</label>
-                    <input type="date" id="generateDate" value="">
-                </div>
-                <div class="info-box">
-                    📌 <strong>配送数量说明</strong>：
-                    <br>• 生成时默认为1份
-                    <br>• 可在飞书表格中修改
-                    <br>• 确认后锁定数量
-                </div>
-                <button class="btn-primary" onclick="generateRecords()">生成配送记录</button>
-                <div id="generateResult" class="result"></div>
             </div>
             
-            <!-- 5. 一键执行所有操作 -->
-            <div class="card">
-                <h2><span class="step-number">5</span> 一键执行所有操作</h2>
-                <p>按顺序自动执行以下操作：</p>
-                <ul>
-                    <li>计算已知餐数（含历史累计）</li>
-                    <li>重新计算结束日期</li>
-                    <li>更新甘特图状态</li>
-                </ul>
-                <div class="info-box">
-                    📌 <strong>推荐频率</strong>：每周一早上运行一次，全面更新所有数据
-                </div>
-                <button class="btn-success" onclick="runAll()">一键执行所有操作</button>
-                <div id="runAllResult" class="result"></div>
+            <div class="section-divider">
+                <span>👇 功能操作区</span>
             </div>
             
-            <!-- 6. 更新甘特图状态 -->
-            <div class="card">
-                <h2><span class="step-number">6</span> 更新甘特图状态</h2>
-                <p>为每位客户生成完整的甘特图数据：</p>
-                <ul>
-                    <li>✅ 起送日期到结束日期</li>
-                    <li>✅ 暂停日期标记</li>
-                    <li>✅ 假期日期标记</li>
-                    <li>✅ 每日配送数量</li>
-                </ul>
-                <div class="info-box">
-                    📌 <strong>数据来源</strong>：从配送记录中汇总
+            <div class="grid">
+                <!-- 新用户初始化 -->
+                <div class="card">
+                    <h2><span class="step-badge">🌟</span> 生成吃餐日历</h2>
+                    <p>为所有客户生成吃餐日历，系统自动计算过去日期的配送情况，并设置默认值。</p>
+                    <div class="tip-box danger">
+                        <span>⚠️</span>
+                        <div>
+                            <strong>仅首次运行！</strong><br>
+                            生成后，过去的日期默认配送数量为1，可在飞书表格"吃餐日历"字段中修改
+                        </div>
+                    </div>
+                    <button class="btn-warning" onclick="generateCalendar()">📅 生成吃餐日历</button>
+                    <div id="generateCalendarResult" class="result"></div>
                 </div>
-                <button class="btn-primary" onclick="updateGantt()">更新甘特图状态</button>
-                <div id="updateGanttResult" class="result"></div>
+                
+                <!-- 生成配送记录 -->
+                <div class="card">
+                    <h2><span class="step-badge">1</span> 生成配送记录</h2>
+                    <p>为指定日期生成配送记录，系统会自动删除旧记录并生成新记录。</p>
+                    <div class="input-group">
+                        <label for="generateDate">📅 配送日期：</label>
+                        <input type="date" id="generateDate" value="">
+                    </div>
+                    <div class="tip-box info">
+                        <span>📌</span>
+                        <div><strong>提示：</strong>选择明天的日期，生成的记录状态为"未确认"，可修改配送数量</div>
+                    </div>
+                    <button class="btn-primary" onclick="generateRecords()">📋 生成配送记录</button>
+                    <div id="generateResult" class="result"></div>
+                </div>
+                
+                <!-- 批量确认 -->
+                <div class="card">
+                    <h2><span class="step-badge">2</span> 批量确认配送</h2>
+                    <p>确认指定日期的所有配送记录，确认后自动同步到吃餐日历并更新统计数据。</p>
+                    <div class="input-group">
+                        <label for="confirmDate">📅 配送日期：</label>
+                        <input type="date" id="confirmDate" value="">
+                    </div>
+                    <div class="tip-box warning">
+                        <span>⚠️</span>
+                        <div>
+                            <strong>注意：</strong>确认后配送数量将被锁定，并自动更新：<br>
+                            ✅ 已吃餐数<br>
+                            ✅ 预计结束日期<br>
+                            ✅ 吃餐日历
+                        </div>
+                    </div>
+                    <button class="btn-success" onclick="confirmDelivery()">✅ 批量确认配送</button>
+                    <div id="confirmResult" class="result"></div>
+                </div>
+                
+                <!-- 重新计算 -->
+                <div class="card">
+                    <h2><span class="step-badge">3</span> 重新计算数据</h2>
+                    <p>根据吃餐日历重新计算已吃餐数，或根据最新数据计算预计结束日期。</p>
+                    <div class="tip-box info">
+                        <span>💡</span>
+                        <div><strong>触发时机：</strong>修改飞书表格中的"吃餐日历"字段后点击</div>
+                    </div>
+                    <button class="btn-info" onclick="recalculateEaten()" style="margin-bottom: 10px;">🔄 重新计算已吃餐数</button>
+                    <button class="btn-info" onclick="recalculateEndDate()">📅 重新计算预计结束日期</button>
+                    <div id="recalculateResult" class="result"></div>
+                </div>
+                
+                <!-- 一键执行 -->
+                <div class="card">
+                    <h2><span class="step-badge">⚡</span> 一键执行所有操作</h2>
+                    <p>按顺序执行所有计算和更新操作，适合每周一早上运行。</p>
+                    <div class="tip-box success">
+                        <span>🎯</span>
+                        <div><strong>执行内容：</strong><br>1. 生成吃餐日历<br>2. 计算已吃餐数<br>3. 计算预计结束日期</div>
+                    </div>
+                    <button class="btn-success" onclick="runAll()">🚀 一键执行所有操作</button>
+                    <div id="runAllResult" class="result"></div>
+                </div>
+                
+                <!-- 更新甘特图 -->
+                <div class="card">
+                    <h2><span class="step-badge">📊</span> 更新甘特图状态</h2>
+                    <p>更新客户的配送状态和暂停日期字段，用于甘特图显示。</p>
+                    <div class="tip-box info">
+                        <span>📊</span>
+                        <div><strong>作用：</strong>更新飞书表格中的甘特图字段</div>
+                    </div>
+                    <button class="btn-primary" onclick="updateGantt()">📊 更新甘特图状态</button>
+                    <div id="updateGanttResult" class="result"></div>
+                </div>
             </div>
-        </div>
-        
-        <div class="footer">
-            <p>💡 操作流程：生成配送记录 → 在飞书表格修改配送数量（如需）→ 确认配送 → 自动累加已吃餐数</p>
-            <p>📞 版本 V2.2 - 支持历史累计、独立计算、配送数量修改</p>
+            
+            <div class="footer">
+                <p>💡 <strong>提示：</strong>操作完成后可在飞书多维表格中查看结果</p>
+                <p>📋 <strong>字段说明：</strong>"吃餐日历"字段存储JSON格式的日历数据，可直接在表格中查看和修改</p>
+                <p>📞 <strong>技术支持：</strong>遇到问题请联系管理员</p>
+            </div>
         </div>
     </div>
     
     <script>
-        // 全局变量
-        let API_URL = localStorage.getItem('api_url') || '';
-        let AUTH_TOKEN = localStorage.getItem('auth_token') || '';
-        let CURRENT_USER = localStorage.getItem('current_user') || '';
+        // ==================== 配置 ====================
+        const DEFAULT_API_URL = 'https://your-app.render.com';
         
-        // 页面加载时检查登录状态
+        // ==================== 全局变量 ====================
+        let API_URL = localStorage.getItem('delivery_api_url') || DEFAULT_API_URL;
+        let TOKEN = localStorage.getItem('delivery_token') || '';
+        
+        // ==================== 初始化 ====================
         window.onload = function() {
-            setDefaultDates();
-            checkLoginStatus();
-            
-            // 如果有保存的API地址，显示
-            if (API_URL) {
-                document.getElementById('apiUrl').value = API_URL;
-            }
+            loadConfig();
+            checkAuth();
         };
         
-        // 检查登录状态
-        async function checkLoginStatus() {
-            if (!AUTH_TOKEN || !API_URL) {
+        function loadConfig() {
+            const savedUser = localStorage.getItem('delivery_user');
+            
+            if (!localStorage.getItem('delivery_api_url')) {
+                document.getElementById('configSection').style.display = 'block';
+            }
+            
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                document.getElementById('userName').textContent = user.username;
+                document.getElementById('userRole').textContent = user.role;
+                document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
+            }
+            
+            document.getElementById('apiUrlInput').value = API_URL;
+        }
+        
+        async function checkAuth() {
+            if (!TOKEN) {
                 showLoginPage();
                 return;
             }
             
             try {
                 const response = await fetch(`${API_URL}/api/verify`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${AUTH_TOKEN}`
-                    }
+                    headers: { 'Authorization': `Bearer ${TOKEN}` }
                 });
+                const data = await response.json();
                 
-                const result = await response.json();
-                
-                if (result.success) {
-                    CURRENT_USER = result.user.username;
+                if (data.success) {
                     showMainPage();
                 } else {
+                    localStorage.removeItem('delivery_token');
                     showLoginPage();
                 }
             } catch (error) {
+                console.log('Auth check failed:', error);
                 showLoginPage();
             }
         }
         
-        // 显示登录页面
+        // ==================== 页面切换 ====================
         function showLoginPage() {
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('mainPage').classList.remove('active');
-            document.body.classList.remove('main-page');
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('current_user');
+            document.getElementById('body').className = 'login-body';
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('mainPage').style.display = 'none';
         }
         
-        // 显示主页面
         function showMainPage() {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('mainPage').classList.add('active');
-            document.body.classList.add('main-page');
-            document.getElementById('currentUser').textContent = CURRENT_USER;
+            document.getElementById('body').className = 'main-body';
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            setDefaultDates();
         }
         
-        // 登录
-        async function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const errorMessage = document.getElementById('errorMessage');
-            
-            if (!username || !password) {
-                errorMessage.textContent = '请输入用户名和密码';
-                errorMessage.style.display = 'block';
+        // ==================== 配置管理 ====================
+        function saveApiUrl() {
+            const url = document.getElementById('apiUrlInput').value.trim();
+            if (!url) {
+                alert('⚠️ 请输入API地址');
                 return;
             }
             
-            if (!API_URL) {
-                errorMessage.textContent = '请先配置后端API地址';
-                errorMessage.style.display = 'block';
+            const cleanUrl = url.replace(/\/$/, '');
+            if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+                alert('⚠️ 请输入完整的URL地址（以http://或https://开头）');
+                return;
+            }
+            
+            localStorage.setItem('delivery_api_url', cleanUrl);
+            API_URL = cleanUrl;
+            
+            document.getElementById('configSection').style.display = 'none';
+            
+            showSuccess('✅ API地址已保存');
+        }
+        
+        // ==================== 登录 ====================
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showError('⚠️ 请输入用户名和密码');
                 return;
             }
             
@@ -704,275 +721,222 @@
             try {
                 const response = await fetch(`${API_URL}/api/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
                 
-                const result = await response.json();
+                const data = await response.json();
                 
-                if (result.success) {
-                    AUTH_TOKEN = result.token;
-                    CURRENT_USER = result.user.username;
-                    localStorage.setItem('auth_token', AUTH_TOKEN);
-                    localStorage.setItem('current_user', CURRENT_USER);
-                    showMainPage();
+                if (data.success) {
+                    TOKEN = data.token;
+                    localStorage.setItem('delivery_token', TOKEN);
+                    localStorage.setItem('delivery_user', JSON.stringify(data.user));
+                    
+                    document.getElementById('userName').textContent = data.user.username;
+                    document.getElementById('userRole').textContent = data.user.role;
+                    document.getElementById('userAvatar').textContent = data.user.username.charAt(0).toUpperCase();
+                    
+                    showSuccess('✅ 登录成功！');
+                    setTimeout(showMainPage, 500);
                 } else {
-                    errorMessage.textContent = result.message || '登录失败';
-                    errorMessage.style.display = 'block';
+                    showError(data.message || '登录失败');
                 }
             } catch (error) {
-                errorMessage.textContent = '登录失败：' + error.message;
-                errorMessage.style.display = 'block';
+                showError('❌ 连接失败，请检查API地址或网络连接');
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.textContent = '登录';
             }
-        }
+        });
         
-        // 登出
-        async function logout() {
-            try {
-                await fetch(`${API_URL}/api/logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${AUTH_TOKEN}`
-                    }
-                });
-            } catch (error) {
-                console.error('登出失败:', error);
-            }
+        function logout() {
+            fetch(`${API_URL}/api/logout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            }).catch(e => console.log('Logout error:', e));
             
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('current_user');
-            AUTH_TOKEN = '';
-            CURRENT_USER = '';
+            localStorage.removeItem('delivery_token');
+            localStorage.removeItem('delivery_user');
+            TOKEN = '';
             showLoginPage();
         }
         
-        // 保存API地址
-        function saveApiUrl() {
-            const url = document.getElementById('apiUrl').value.trim();
-            const statusDiv = document.getElementById('apiStatus');
+        // ==================== 工作流调用 ====================
+        async function callWorkflow(workflowType, deliveryDate = null) {
+            const body = { workflow_type: workflowType };
+            if (deliveryDate) body.delivery_date = deliveryDate;
             
-            if (!url) {
-                statusDiv.textContent = '请输入API地址';
-                statusDiv.className = 'api-status error';
-                statusDiv.style.display = 'block';
+            const response = await fetch(`${API_URL}/run`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${TOKEN}`
+                },
+                body: JSON.stringify(body)
+            });
+            
+            if (response.status === 401) {
+                logout();
                 return;
             }
             
-            // 移除末尾斜杠
-            const cleanUrl = url.replace(/\/$/, '');
-            
-            localStorage.setItem('api_url', cleanUrl);
-            API_URL = cleanUrl;
-            
-            // 测试连接
-            testApiConnection(cleanUrl);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
         }
         
-        // 测试API连接
-        async function testApiConnection(url) {
-            const statusDiv = document.getElementById('apiStatus');
-            statusDiv.textContent = '正在测试连接...';
-            statusDiv.className = 'api-status';
-            statusDiv.style.display = 'block';
+        // ==================== 操作函数 ====================
+        async function generateCalendar() {
+            if (!confirm('确认生成所有客户的吃餐日历吗？\n\n⚠️ 这将为过去日期设置默认配送数量为1')) return;
             
-            try {
-                const response = await fetch(`${url}/health`);
-                const result = await response.json();
-                
-                if (result.status === 'ok') {
-                    statusDiv.textContent = '✅ 后端连接成功！';
-                    statusDiv.className = 'api-status success';
-                } else {
-                    statusDiv.textContent = '❌ 后端响应异常';
-                    statusDiv.className = 'api-status error';
-                }
-            } catch (error) {
-                statusDiv.textContent = '❌ 连接失败：' + error.message;
-                statusDiv.className = 'api-status error';
+            showLoading('generateCalendarResult');
+            try { 
+                const result = await callWorkflow('generate_calendar');
+                showResult('generateCalendarResult', result);
+            } catch (error) { 
+                showErrorResult('generateCalendarResult', error); 
             }
         }
         
-        // 设置默认日期
+        async function generateRecords() {
+            const date = document.getElementById('generateDate').value;
+            if (!date) { alert('⚠️ 请选择日期'); return; }
+            if (!confirm(`确认生成 ${date} 的配送记录吗？\n\n⚠️ 将删除该日期的旧记录`)) return;
+            
+            showLoading('generateResult');
+            try { 
+                const result = await callWorkflow('generate', date);
+                showResult('generateResult', result);
+            } catch (error) { 
+                showErrorResult('generateResult', error); 
+            }
+        }
+        
+        async function confirmDelivery() {
+            const date = document.getElementById('confirmDate').value;
+            if (!date) { alert('⚠️ 请选择日期'); return; }
+            if (!confirm(`确认批量确认 ${date} 的配送记录吗？\n\n⚠️ 确认后将锁定配送数量并自动更新已吃餐数`)) return;
+            
+            showLoading('confirmResult');
+            try { 
+                const result = await callWorkflow('confirm', date);
+                showResult('confirmResult', result);
+            } catch (error) { 
+                showErrorResult('confirmResult', error); 
+            }
+        }
+        
+        async function recalculateEaten() {
+            showLoading('recalculateResult');
+            try { 
+                const result = await callWorkflow('recalculate_eaten');
+                showResult('recalculateResult', result);
+            } catch (error) { 
+                showErrorResult('recalculateResult', error); 
+            }
+        }
+        
+        async function recalculateEndDate() {
+            showLoading('recalculateResult');
+            try { 
+                const result = await callWorkflow('recalculate_end_date');
+                showResult('recalculateResult', result);
+            } catch (error) { 
+                showErrorResult('recalculateResult', error); 
+            }
+        }
+        
+        async function runAll() {
+            if (!confirm('确认执行所有操作吗？')) return;
+            
+            showLoading('runAllResult');
+            try {
+                const results = [];
+                
+                results.push('1️⃣ 生成吃餐日历...');
+                await callWorkflow('generate_calendar');
+                results.push('✅ 完成');
+                
+                results.push('2️⃣ 计算已吃餐数...');
+                await callWorkflow('recalculate_eaten');
+                results.push('✅ 完成');
+                
+                results.push('3️⃣ 计算预计结束日期...');
+                await callWorkflow('recalculate_end_date');
+                results.push('✅ 完成');
+                
+                const div = document.getElementById('runAllResult');
+                div.className = 'result success';
+                div.innerHTML = `<strong>✅ 全部完成</strong><br>${results.join('<br>')}`;
+            } catch (error) { 
+                showErrorResult('runAllResult', error); 
+            }
+        }
+        
+        async function updateGantt() {
+            showLoading('updateGanttResult');
+            try { 
+                const result = await callWorkflow('update_gantt');
+                showResult('updateGanttResult', result);
+            } catch (error) { 
+                showErrorResult('updateGanttResult', error); 
+            }
+        }
+        
+        // ==================== 工具函数 ====================
         function setDefaultDates() {
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             
-            const todayStr = today.toISOString().split('T')[0];
-            const tomorrowStr = tomorrow.toISOString().split('T')[0];
-            
-            const generateDateInput = document.getElementById('generateDate');
-            const confirmDateInput = document.getElementById('confirmDate');
-            
-            if (generateDateInput) generateDateInput.value = tomorrowStr;
-            if (confirmDateInput) confirmDateInput.value = todayStr;
+            document.getElementById('generateDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('confirmDate').value = today.toISOString().split('T')[0];
         }
         
-        // 调用工作流API
-        async function callWorkflow(workflowType, deliveryDate = null) {
-            const url = `${API_URL}/run`;
-            const body = {
-                workflow_type: workflowType
-            };
-            
-            if (deliveryDate) {
-                body.delivery_date = deliveryDate;
-            }
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${AUTH_TOKEN}`
-                },
-                body: JSON.stringify(body)
-            });
-            
-            return await response.json();
+        function showError(msg) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMsg').style.display = 'none';
         }
         
-        // 显示结果
+        function showSuccess(msg) {
+            const successDiv = document.getElementById('successMsg');
+            successDiv.textContent = msg;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+        
         function showResult(elementId, data) {
-            const resultDiv = document.getElementById(elementId);
-            resultDiv.style.display = 'block';
+            const div = document.getElementById(elementId);
+            div.style.display = 'block';
             
             if (data.success) {
-                resultDiv.className = 'result success';
-                
-                let html = `<strong>✅ 成功</strong><br>${data.message}<br>`;
-                
+                div.className = 'result success';
+                let html = `<strong>✅ 成功</strong><br>${data.message}`;
                 if (data.data && data.data.debug_info) {
-                    html += '<details><summary>📋 详细信息</summary>';
-                    html += data.data.debug_info.map(info => `<div>${info}</div>`).join('');
-                    html += '</details>';
+                    html += `<details style="margin-top:10px;"><summary style="cursor:pointer;">详细信息 (${data.data.debug_info.length}条)</summary>`;
+                    html += `<div style="margin-top:10px;padding:10px;background:rgba(0,0,0,0.05);font-size:0.9em;max-height:200px;overflow-y:auto;">${data.data.debug_info.join('<br>')}</div></details>`;
                 }
-                
-                if (data.data && data.data.tips) {
-                    html += '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #155724;">';
-                    html += '<strong>💡 提示：</strong><br>';
-                    html += data.data.tips.map(tip => `<div>${tip}</div>`).join('');
-                    html += '</div>';
-                }
-                
-                resultDiv.innerHTML = html;
+                div.innerHTML = html;
             } else {
-                resultDiv.className = 'result error';
-                let html = `<strong>❌ 失败</strong><br>${data.message || '未知错误'}`;
-                
-                if (data.data && data.data.debug_info) {
-                    html += '<br><div style="margin-top: 10px;">';
-                    html += data.data.debug_info.map(info => `<div>${info}</div>`).join('');
-                    html += '</div>';
-                }
-                
-                if (data.data && data.data.tips) {
-                    html += '<br><div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #721c24;">';
-                    html += '<strong>💡 解决建议：</strong><br>';
-                    html += data.data.tips.map(tip => `<div>${tip}</div>`).join('');
-                    html += '</div>';
-                }
-                
-                resultDiv.innerHTML = html;
+                div.className = 'result error';
+                div.innerHTML = `<strong>❌ 失败</strong><br>${data.message || '未知错误'}`;
             }
         }
         
-        // 显示加载中
         function showLoading(elementId) {
-            const resultDiv = document.getElementById(elementId);
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'result loading';
-            resultDiv.innerHTML = '<strong>⏳ 正在执行...</strong><br>请稍候，可能需要10-30秒';
+            const div = document.getElementById(elementId);
+            div.style.display = 'block';
+            div.className = 'result loading';
+            div.innerHTML = '<strong>⏳ 执行中...</strong>';
         }
         
-        // 1. 计算已知餐数
-        async function recalculateEaten() {
-            showLoading('recalculateEatenResult');
-            try {
-                const result = await callWorkflow('recalculate_eaten');
-                showResult('recalculateEatenResult', result);
-            } catch (error) {
-                showResult('recalculateEatenResult', { success: false, message: error.message });
-            }
+        function showErrorResult(elementId, error) {
+            const div = document.getElementById(elementId);
+            div.style.display = 'block';
+            div.className = 'result error';
+            div.innerHTML = `<strong>❌ 失败</strong><br>${error.message || error}<br><small>请检查网络或联系管理员</small>`;
         }
-        
-        // 2. 重新计算结束日期
-        async function recalculateEndDate() {
-            showLoading('recalculateEndDateResult');
-            try {
-                const result = await callWorkflow('recalculate_end_date');
-                showResult('recalculateEndDateResult', result);
-            } catch (error) {
-                showResult('recalculateEndDateResult', { success: false, message: error.message });
-            }
-        }
-        
-        // 3. 批量确认配送
-        async function confirmDelivery() {
-            const date = document.getElementById('confirmDate').value;
-            if (!date) {
-                alert('请选择配送日期');
-                return;
-            }
-            
-            showLoading('confirmResult');
-            try {
-                const result = await callWorkflow('confirm', date);
-                showResult('confirmResult', result);
-            } catch (error) {
-                showResult('confirmResult', { success: false, message: error.message });
-            }
-        }
-        
-        // 4. 生成配送记录
-        async function generateRecords() {
-            const date = document.getElementById('generateDate').value;
-            if (!date) {
-                alert('请选择配送日期');
-                return;
-            }
-            
-            showLoading('generateResult');
-            try {
-                const result = await callWorkflow('generate', date);
-                showResult('generateResult', result);
-            } catch (error) {
-                showResult('generateResult', { success: false, message: error.message });
-            }
-        }
-        
-        // 5. 一键执行所有操作
-        async function runAll() {
-            showLoading('runAllResult');
-            try {
-                const result = await callWorkflow('run_all');
-                showResult('runAllResult', result);
-            } catch (error) {
-                showResult('runAllResult', { success: false, message: error.message });
-            }
-        }
-        
-        // 6. 更新甘特图
-        async function updateGantt() {
-            showLoading('updateGanttResult');
-            try {
-                const result = await callWorkflow('update_gantt');
-                showResult('updateGanttResult', result);
-            } catch (error) {
-                showResult('updateGanttResult', { success: false, message: error.message });
-            }
-        }
-        
-        // 支持回车登录
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !document.getElementById('loginPage').classList.contains('hidden')) {
-                login();
-            }
-        });
     </script>
 </body>
 </html>
