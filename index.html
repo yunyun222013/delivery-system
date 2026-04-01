@@ -429,85 +429,6 @@
                 <p>吃餐日历双轨制管理</p>
             </header>
             
-            <!-- 新用户流程 -->
-            <div class="workflow-card">
-                <h2>📋 新用户初始化流程（仅首次）</h2>
-                <div class="flow-steps">
-                    <div class="flow-step">
-                        <div class="flow-step-number">1</div>
-                        <h3>填写客户信息</h3>
-                        <p>在飞书表格中填写：客户姓名、手机号、配送地址、起送日期、总餐数等基础信息</p>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">2</div>
-                        <h3>更新暂停表/假期表</h3>
-                        <p>如果有暂停日期或公共假期，在对应表格中填写</p>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">3</div>
-                        <h3>生成吃餐日历</h3>
-                        <p>点击下方"生成吃餐日历"按钮，系统自动为过去日期填充默认值</p>
-                        <span class="flow-step-code">重要！</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第一天流程 -->
-            <div class="workflow-card">
-                <h2>🌟 第一天开始使用（仅首次）</h2>
-                <div class="flow-steps">
-                    <div class="flow-step">
-                        <div class="flow-step-number">1</div>
-                        <h3>生成今天的配送记录</h3>
-                        <p>选择今天的日期，点击"生成配送记录"，所有记录状态为"未确认"</p>
-                        <span class="flow-step-code">早上操作</span>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">2</div>
-                        <h3>在飞书表格中检查</h3>
-                        <p>打开配送记录表，检查/修改配送数量（此时仍可修改）</p>
-                        <span class="flow-step-code">白天操作</span>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">3</div>
-                        <h3>批量确认今天的记录</h3>
-                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
-                        <span class="flow-step-code">晚上操作</span>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">4</div>
-                        <h3>生成明天的配送记录</h3>
-                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
-                        <span class="flow-step-code">晚上操作</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 每日操作流程 -->
-            <div class="workflow-card">
-                <h2>🔄 每日操作流程（第二天及之后）</h2>
-                <div class="flow-steps">
-                    <div class="flow-step">
-                        <div class="flow-step-number">1</div>
-                        <h3>批量确认今天的配送记录</h3>
-                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
-                        <span class="flow-step-code">晚上操作</span>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">2</div>
-                        <h3>生成明天的配送记录</h3>
-                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
-                        <span class="flow-step-code">晚上操作</span>
-                    </div>
-                </div>
-            </div>
-            
             <div class="section-divider">
                 <span>👇 功能操作区</span>
             </div>
@@ -600,6 +521,89 @@
                     </div>
                     <button class="btn-primary" onclick="updateGantt()">📊 更新甘特图状态</button>
                     <div id="updateGanttResult" class="result"></div>
+                </div>
+            </div>
+            
+            <div class="section-divider">
+                <span>📖 操作流程说明</span>
+            </div>
+            
+            <!-- 每日操作流程 -->
+            <div class="workflow-card">
+                <h2>🔄 每日操作流程（日常使用）</h2>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <h3>批量确认今天的配送记录</h3>
+                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <h3>生成明天的配送记录</h3>
+                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 第一天流程 -->
+            <div class="workflow-card">
+                <h2>🌟 第一天开始使用（仅首次）</h2>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <h3>生成今天的配送记录</h3>
+                        <p>选择今天的日期，点击"生成配送记录"，所有记录状态为"未确认"</p>
+                        <span class="flow-step-code">早上操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <h3>在飞书表格中检查</h3>
+                        <p>打开配送记录表，检查/修改配送数量（此时仍可修改）</p>
+                        <span class="flow-step-code">白天操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">3</div>
+                        <h3>批量确认今天的记录</h3>
+                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">4</div>
+                        <h3>生成明天的配送记录</h3>
+                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
+                        <span class="flow-step-code">晚上操作</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新用户流程 -->
+            <div class="workflow-card">
+                <h2>📋 新用户初始化流程（仅首次）</h2>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="flow-step-number">1</div>
+                        <h3>填写客户信息</h3>
+                        <p>在飞书表格中填写：客户姓名、手机号、配送地址、起送日期、总餐数等基础信息</p>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">2</div>
+                        <h3>更新暂停表/假期表</h3>
+                        <p>如果有暂停日期或公共假期，在对应表格中填写</p>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="flow-step-number">3</div>
+                        <h3>生成吃餐日历</h3>
+                        <p>点击上方"生成吃餐日历"按钮，系统自动为过去日期填充默认值</p>
+                        <span class="flow-step-code">重要！</span>
+                    </div>
                 </div>
             </div>
             
