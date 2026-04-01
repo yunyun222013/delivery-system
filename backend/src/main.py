@@ -23,7 +23,7 @@ HOLIDAY_TABLE_ID = os.getenv("HOLIDAY_TABLE_ID", "")
 PAUSE_TABLE_ID = os.getenv("PAUSE_TABLE_ID", "")
 
 # FastAPI应用
-app = FastAPI(title="配送管理系统API V2.6", version="2.6.0")
+app = FastAPI(title="配送管理系统API V2.7", version="2.7.0")
 
 # CORS配置
 app.add_middleware(
@@ -62,6 +62,32 @@ def verify_token(token: str) -> Optional[Dict]:
         del SESSIONS[token]
         return None
     return session
+
+# 辅助函数：提取富文本内容
+def extract_text(value: Any) -> str:
+    """
+    提取富文本字段中的纯文本
+    飞书富文本格式: [{'text': '张张', 'type': 'text'}]
+    """
+    if not value:
+        return ""
+    
+    # 如果是字符串，直接返回
+    if isinstance(value, str):
+        return value.strip()
+    
+    # 如果是列表（富文本格式）
+    if isinstance(value, list):
+        texts = []
+        for item in value:
+            if isinstance(item, dict) and 'text' in item:
+                texts.append(item['text'])
+            elif isinstance(item, str):
+                texts.append(item)
+        return ''.join(texts).strip()
+    
+    # 其他情况
+    return str(value).strip()
 
 # 飞书API
 def get_feishu_token():
@@ -311,11 +337,7 @@ def get_holiday_dates() -> List[datetime]:
 
 # 辅助函数：获取客户已确认的配送记录累计
 def get_customer_confirmed_delivery_count(customer_name: str) -> int:
-    """
-    获取客户历史已确认配送记录的累计配送数量
-    确认状态是单选，可能是"已确认"/"未确认"或其他值
-    """
-    # 先查询所有该客户的配送记录
+    """获取客户历史已确认配送记录的累计配送数量"""
     filter_condition = {
         "conditions": [{
             "field_name": "客户姓名",
@@ -329,12 +351,11 @@ def get_customer_confirmed_delivery_count(customer_name: str) -> int:
     
     for record in delivery_records:
         fields = record.get('fields', {})
-        confirm_status = fields.get('确认状态', '')
+        confirm_status = extract_text(fields.get('确认状态', ''))
         
-        # 判断是否已确认（可能是"已确认"、True、或"是"）
+        # 判断是否已确认
         is_confirmed = (
             confirm_status == "已确认" or 
-            confirm_status == True or 
             confirm_status == "是" or
             str(confirm_status).lower() in ["true", "yes", "1"]
         )
@@ -394,7 +415,7 @@ def calculate_end_date_with_history(start_date: datetime, total_meals: int,
 # API接口
 @app.get("/")
 async def root():
-    return {"message": "配送管理系统API V2.6运行中", "version": "2.6.0"}
+    return {"message": "配送管理系统API V2.7运行中", "version": "2.7.0"}
 
 @app.get("/health")
 async def health():
@@ -405,7 +426,7 @@ async def diagnose():
     """诊断接口 - 显示所有字段名和数据样例"""
     diagnosis = {
         "timestamp": datetime.now().isoformat(),
-        "version": "2.6.0",
+        "version": "2.7.0",
         "env_config": {
             "FEISHU_APP_ID": "已配置" if FEISHU_APP_ID else "❌ 未配置",
             "FEISHU_APP_SECRET": "已配置" if FEISHU_APP_SECRET else "❌ 未配置",
@@ -414,6 +435,16 @@ async def diagnose():
             "DELIVERY_TABLE_ID": "已配置" if DELIVERY_TABLE_ID else "❌ 未配置",
             "HOLIDAY_TABLE_ID": "已配置" if HOLIDAY_TABLE_ID else "❌ 未配置",
             "PAUSE_TABLE_ID": "已配置" if PAUSE_TABLE_ID else "❌ 未配置"
+        },
+        "permission_guide": {
+            "error_91403": "Forbidden - 权限不足",
+            "solution": [
+                "1. 打开飞书开放平台: https://open.feishu.cn/app",
+                "2. 进入应用 → 权限管理",
+                "3. 添加权限: bitable:record:write, bitable:record:read, bitable:app",
+                "4. 发布新版本",
+                "5. 多维表格中添加应用（高级设置 → 添加应用）"
+            ]
         },
         "tests": {}
     }
@@ -443,9 +474,6 @@ async def diagnose():
             if deliveries:
                 first_delivery = deliveries[0].get('fields', {})
                 diagnosis["tests"]["delivery_fields"] = list(first_delivery.keys())
-                diagnosis["tests"]["delivery_sample"] = {
-                    k: str(v)[:100] for k, v in first_delivery.items()
-                }
         except Exception as e:
             diagnosis["tests"]["delivery_table"] = f"❌ 查询失败: {str(e)}"
     
@@ -594,7 +622,12 @@ async def recalculate_eaten_meals():
         for customer in customers:
             fields = customer.get('fields', {})
             record_id = customer.get('record_id')
-            customer_name = fields.get('客户姓名', '未知')
+            # 提取客户姓名（处理富文本格式）
+            customer_name = extract_text(fields.get('客户姓名'))
+            
+            if not customer_name:
+                debug_info.append(f"⚠️ 记录 {record_id}: 客户姓名为空，跳过")
+                continue
             
             try:
                 total_meals = fields.get('总餐数', 0)
@@ -663,7 +696,10 @@ async def recalculate_end_date():
         for customer in customers:
             fields = customer.get('fields', {})
             record_id = customer.get('record_id')
-            customer_name = fields.get('客户姓名', '未知')
+            customer_name = extract_text(fields.get('客户姓名'))
+            
+            if not customer_name:
+                continue
             
             try:
                 total_meals = fields.get('总餐数', 0)
@@ -733,7 +769,7 @@ async def update_delivery_count(record_id: str, delivery_count: int):
             return {"success": False, "message": "配送记录不存在"}
         
         fields = target_record.get('fields', {})
-        is_confirmed = fields.get('确认状态', '')
+        is_confirmed = extract_text(fields.get('确认状态', ''))
         
         if is_confirmed == "已确认":
             return {
@@ -789,8 +825,8 @@ async def confirm_delivery(delivery_date: str):
         for record in records:
             fields = record.get('fields', {})
             record_id = record.get('record_id')
-            customer_name = fields.get('客户姓名', '未知')
-            is_confirmed = fields.get('确认状态', '')
+            customer_name = extract_text(fields.get('客户姓名'))
+            is_confirmed = extract_text(fields.get('确认状态', ''))
             delivery_qty = fields.get('配送数量', 1)
             
             if is_confirmed == "已确认":
@@ -885,18 +921,18 @@ async def generate_delivery_records(delivery_date: str):
         
         for customer in customers:
             fields = customer.get('fields', {})
-            customer_name = fields.get('客户姓名')
+            customer_name = extract_text(fields.get('客户姓名'))
             start_date = parse_date(fields.get('起送日期'))
             end_date = parse_date(fields.get('预计结束日期'))
             total_meals = fields.get('总餐数', 0)
             eaten_meals = fields.get('已吃餐数', 0)
             
             # 从客户表读取其他字段
-            phone = fields.get('手机号', '')
-            address = fields.get('配送地址', '')
-            taboo = fields.get('忌口', '')
-            extra = fields.get('加量', '')
-            remark = fields.get('备注', '')
+            phone = extract_text(fields.get('手机号'))
+            address = extract_text(fields.get('配送地址'))
+            taboo = extract_text(fields.get('忌口'))
+            extra = extract_text(fields.get('加量'))
+            remark = extract_text(fields.get('备注'))
             
             if not customer_name:
                 continue
@@ -933,7 +969,7 @@ async def generate_delivery_records(delivery_date: str):
                     if end_date and tomorrow.date() > end_date.date():
                         is_last_day = True
                     
-                    # 创建配送记录（复选框字段需要布尔值）
+                    # 创建配送记录
                     delivery_fields = {
                         "配送日期": delivery_date,
                         "客户姓名": customer_name,
@@ -943,7 +979,7 @@ async def generate_delivery_records(delivery_date: str):
                         "加量": extra,
                         "备注": remark,
                         "配送数量": 1,
-                        "明天是否是最后一天": is_last_day,  # 布尔值
+                        "明天是否是最后一天": is_last_day,
                         "确认状态": "未确认"
                     }
                     
@@ -995,7 +1031,7 @@ async def update_gantt_status():
         for customer in customers:
             fields = customer.get('fields', {})
             record_id = customer.get('record_id')
-            customer_name = fields.get('客户姓名')
+            customer_name = extract_text(fields.get('客户姓名'))
             start_date = parse_date(fields.get('起送日期'))
             end_date = parse_date(fields.get('预计结束日期'))
             
@@ -1037,9 +1073,9 @@ async def update_gantt_status():
                     
                     for record in delivery_records:
                         r_fields = record.get('fields', {})
-                        if r_fields.get('客户姓名') == customer_name:
+                        if extract_text(r_fields.get('客户姓名')) == customer_name:
                             delivery_info["delivery_count"] = r_fields.get('配送数量', 0)
-                            delivery_info["is_confirmed"] = r_fields.get('确认状态', '') == "已确认"
+                            delivery_info["is_confirmed"] = extract_text(r_fields.get('确认状态')) == "已确认"
                             break
                     
                     gantt_data["daily_details"].append(delivery_info)
