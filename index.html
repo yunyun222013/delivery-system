@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配送管理系统 V2 - 登录</title>
+    <title>配送管理系统 V2.2</title>
     <style>
         * {
             margin: 0;
@@ -21,7 +21,7 @@
             padding: 20px;
         }
         
-        /* 登录页面样式 */
+        /* 登录页面 */
         .login-container {
             background: white;
             border-radius: 20px;
@@ -139,7 +139,7 @@
             color: #721c24;
         }
         
-        /* 主页面样式 */
+        /* 主页面 */
         .main-container {
             display: none;
             max-width: 1200px;
@@ -434,13 +434,22 @@
             font-size: 0.9em;
             border-left: 4px solid #dc3545;
         }
+        
+        .success-box {
+            background: #d4edda;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            border-left: 4px solid #28a745;
+        }
     </style>
 </head>
 <body>
     <!-- 登录页面 -->
     <div class="login-container" id="loginPage">
         <h1>🍱 配送管理系统</h1>
-        <p class="version">V2.0 - 智能计算 + 自动累计</p>
+        <p class="version">V2.2 - 智能计算 + 历史累计</p>
         
         <div class="error-message" id="errorMessage"></div>
         
@@ -479,8 +488,8 @@
         </div>
         
         <header>
-            <h1>🍱 配送管理系统 V2</h1>
-            <p>智能计算 + 自动累计 + 甘特图可视化</p>
+            <h1>🍱 配送管理系统 V2.2</h1>
+            <p>智能计算 + 历史累计 + 甘特图可视化</p>
         </header>
         
         <!-- 上边：计算相关 -->
@@ -522,19 +531,19 @@
             
             <!-- 3. 批量确认今日餐数 -->
             <div class="card">
-                <h2><span class="step-number">3</span> 批量确认今日餐数（强制）</h2>
+                <h2><span class="step-number">3</span> 批量确认配送记录</h2>
                 <p>确认指定日期的配送记录，并自动累加已吃餐数：</p>
                 <ul>
-                    <li>⚠️ 必须先生成配送记录</li>
                     <li>✅ 确认后自动累加已吃餐数</li>
                     <li>✅ 已确认的不会重复计算</li>
+                    <li>✅ 确认后配送数量锁定</li>
                 </ul>
                 <div class="input-group">
                     <label for="confirmDate">确认日期：</label>
                     <input type="date" id="confirmDate" value="">
                 </div>
                 <div class="error-box">
-                    ⚠️ <strong>强制执行</strong>：生成明天配送记录前，必须先确认今天的配送
+                    ⚠️ <strong>操作流程</strong>：先生成配送记录 → 在飞书表格修改配送数量（如需）→ 确认配送
                 </div>
                 <button class="btn-success" onclick="confirmDelivery()">批量确认配送</button>
                 <div id="confirmResult" class="result"></div>
@@ -559,7 +568,10 @@
                     <input type="date" id="generateDate" value="">
                 </div>
                 <div class="info-box">
-                    📌 <strong>使用提示</strong>：输入明天日期，建议先生成再确认
+                    📌 <strong>配送数量说明</strong>：
+                    <br>• 生成时默认为1份
+                    <br>• 可在飞书表格中修改
+                    <br>• 确认后锁定数量
                 </div>
                 <button class="btn-primary" onclick="generateRecords()">生成配送记录</button>
                 <div id="generateResult" class="result"></div>
@@ -600,8 +612,8 @@
         </div>
         
         <div class="footer">
-            <p>💡 提示：生成配送记录前，请确保客户订单表中的"起送日期"已正确填写（年份不要填错）</p>
-            <p>📞 版本 V2.1 - 支持历史累计、独立计算、强制确认</p>
+            <p>💡 操作流程：生成配送记录 → 在飞书表格修改配送数量（如需）→ 确认配送 → 自动累加已吃餐数</p>
+            <p>📞 版本 V2.2 - 支持历史累计、独立计算、配送数量修改</p>
         </div>
     </div>
     
@@ -851,6 +863,12 @@
             } else {
                 resultDiv.className = 'result error';
                 let html = `<strong>❌ 失败</strong><br>${data.message || '未知错误'}`;
+                
+                if (data.data && data.data.debug_info) {
+                    html += '<br><div style="margin-top: 10px;">';
+                    html += data.data.debug_info.map(info => `<div>${info}</div>`).join('');
+                    html += '</div>';
+                }
                 
                 if (data.data && data.data.tips) {
                     html += '<br><div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #721c24;">';
