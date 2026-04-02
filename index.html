@@ -511,6 +511,7 @@
             <h1>🍱 配送管理系统</h1>
             <input type="text" id="username" placeholder="用户名" value="admin">
             <input type="password" id="password" placeholder="密码" value="admin123">
+            <input type="text" id="loginApiUrl" placeholder="API地址（可选）" style="background: #f8f9fa;">
             <button onclick="login()">登录</button>
             <p style="margin-top: 15px; text-align: center; color: #666; font-size: 12px;">
                 默认账号: admin / admin123
@@ -698,6 +699,9 @@
             document.getElementById('currentApiUrl').textContent = API_URL;
             document.getElementById('apiUrlInput').value = API_URL;
             
+            // 登录页显示当前API地址
+            document.getElementById('loginApiUrl').value = API_URL;
+            
             // 设置默认日期为今天
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('deliveryDate').value = today;
@@ -713,6 +717,13 @@
         async function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            
+            // 如果登录页填写了API地址，则更新
+            const loginApiUrl = document.getElementById('loginApiUrl').value.trim();
+            if (loginApiUrl) {
+                API_URL = loginApiUrl;
+                localStorage.setItem('apiUrl', API_URL);
+            }
             
             try {
                 const res = await fetch(`${API_URL}/api/login`, {
