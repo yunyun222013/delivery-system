@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配送管理系统 V3.4</title>
+    <title>配送管理系统 V3.3</title>
     <style>
         * {
             margin: 0;
@@ -64,18 +64,6 @@
         
         .login-box button:hover {
             transform: translateY(-2px);
-        }
-        
-        .login-box .api-setting {
-            margin-top: 10px;
-        }
-        
-        .login-box .api-setting button {
-            background: #2ed573;
-        }
-        
-        .login-box .api-setting button:hover {
-            background: #26bf65;
         }
         
         /* 主页面 */
@@ -527,19 +515,6 @@
             <p style="margin-top: 15px; text-align: center; color: #666; font-size: 12px;">
                 默认账号: admin / admin123
             </p>
-            
-            <!-- API地址设置 -->
-            <div class="api-setting">
-                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
-                <label style="display: block; font-size: 13px; color: #666; margin-bottom: 8px;">
-                    ⚙️ API地址设置
-                </label>
-                <input type="text" id="loginApiUrl" placeholder="输入后端API地址" style="margin-bottom: 10px;">
-                <button onclick="saveApiFromLogin()" style="background: #2ed573;">保存地址</button>
-                <p id="currentApiDisplay" style="margin-top: 10px; font-size: 11px; color: #999; word-break: break-all;">
-                    当前: 
-                </p>
-            </div>
         </div>
     </div>
     
@@ -547,7 +522,7 @@
     <div class="main-container" id="mainPage">
         <!-- 头部 -->
         <div class="header">
-            <h1>🍱 配送管理系统 V3.4</h1>
+            <h1>🍱 配送管理系统 V3.3</h1>
             <div class="user-info">
                 <span id="userInfo"></span>
                 <button class="btn btn-danger" onclick="logout()">退出</button>
@@ -720,11 +695,8 @@
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 设置API地址显示
             document.getElementById('currentApiUrl').textContent = API_URL;
             document.getElementById('apiUrlInput').value = API_URL;
-            document.getElementById('loginApiUrl').value = API_URL;
-            document.getElementById('currentApiDisplay').textContent = '当前: ' + API_URL;
             
             // 设置默认日期为今天
             const today = new Date().toISOString().split('T')[0];
@@ -736,21 +708,6 @@
                 verifyToken();
             }
         });
-        
-        // 从登录页保存API地址
-        function saveApiFromLogin() {
-            const newUrl = document.getElementById('loginApiUrl').value.trim();
-            if (newUrl) {
-                API_URL = newUrl;
-                localStorage.setItem('apiUrl', API_URL);
-                document.getElementById('currentApiUrl').textContent = API_URL;
-                document.getElementById('currentApiDisplay').textContent = '当前: ' + API_URL;
-                document.getElementById('apiUrlInput').value = API_URL;
-                alert('API地址已保存: ' + API_URL);
-            } else {
-                alert('请输入有效的API地址');
-            }
-        }
         
         // 登录
         async function login() {
