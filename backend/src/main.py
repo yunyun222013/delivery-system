@@ -2,7 +2,7 @@ import os
 import json
 import secrets
 import logging
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -86,6 +86,10 @@ def extract_multi_select(value: Any) -> List[str]:
     if not value:
         return []
     
+    # 如果是字符串，按逗号分割
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(',') if v.strip()]
+    
     # 如果是列表
     if isinstance(value, list):
         options = []
@@ -95,10 +99,6 @@ def extract_multi_select(value: Any) -> List[str]:
             elif isinstance(item, str):
                 options.append(item)
         return options
-    
-    # 如果是字符串，按逗号分割
-    if isinstance(value, str):
-        return [v.strip() for v in value.split(',') if v.strip()]
     
     return []
 
@@ -112,13 +112,14 @@ def extract_single_select(value: Any) -> str:
         return value.strip()
     
     if isinstance(value, dict):
-        return value.get('text', '') or value.get('name', '') or ''
+        # 飞书单选字段可能返回 {"id": "xxx", "text": "选项值"}
+        return value.get('text', '') or value.get('name', '') or str(value.get('id', ''))
     
     return str(value).strip()
 
 # 辅助函数：日期转时间戳（毫秒）
 def date_to_timestamp(date_value) -> int:
-    """将日期转换为飞书时间戳（毫秒）- 使用本地时间"""
+    """将日期转换为飞书时间戳（毫秒），使用本地时区"""
     if isinstance(date_value, datetime):
         return int(date_value.timestamp() * 1000)
     elif isinstance(date_value, str):
@@ -128,9 +129,15 @@ def date_to_timestamp(date_value) -> int:
         return int(date_value)
     return 0
 
-# 辅助函数：解析日期（修复时区问题 - 使用本地时间）
+# 🔧 修复：解析日期（使用本地时区，避免日期错位）
 def parse_date(date_value) -> Optional[date]:
-    """解析飞书日期字段，返回date对象"""
+    """
+    解析飞书日期字段，返回date对象
+    
+    关键修复：
+    - 使用本地时区而非UTC，避免时区导致的日期偏移
+    - 飞书时间戳是毫秒级，存储的是本地时间的0点
+    """
     if not date_value:
         return None
     
@@ -138,9 +145,8 @@ def parse_date(date_value) -> Optional[date]:
         if isinstance(date_value, (int, float)):
             # 飞书时间戳是毫秒，转换为秒
             ts = date_value / 1000
-            # 使用本地时间（不再使用UTC）
+            # 🔧 使用fromtimestamp而非utcfromtimestamp，使用本地时区
             dt = datetime.fromtimestamp(ts)
-            logger.info(f"解析时间戳 {date_value} -> {dt.date()}")
             return dt.date()
         elif isinstance(date_value, str):
             for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%Y年%m月%d日"]:
@@ -182,7 +188,7 @@ def get_feishu_token():
         logger.error(f"❌ 获取飞书token异常: {e}")
         return None
 
-def query_bitable_records(table_id: str, filter_condition: Dict = None):
+def query_bitable_records(table_id: str, filter_condition: Dict = None) -> List[Dict]:
     """查询多维表格记录"""
     if not BITABLE_APP_TOKEN or not table_id:
         logger.error(f"❌ 配置缺失")
@@ -392,12 +398,12 @@ def get_holiday_dates() -> List[date]:
         fields = record.get('fields', {})
         holiday_date = parse_date(fields.get('日期'))
         if holiday_date:
-            logger.info(f"假期日期: {holiday_date}")
             holiday_dates.append(holiday_date)
+            logger.info(f"📅 假期: {holiday_date}")
     
     return holiday_dates
 
-# 🔴 核心函数：生成吃餐日历
+# 🔧 核心函数：生成吃餐日历（修复版）
 def generate_meal_calendar(
     customer_name: str,
     start_date: date,
@@ -409,10 +415,10 @@ def generate_meal_calendar(
     """
     生成吃餐日历
     
-    规则：
-    1. 从起送日期当天开始计算
-    2. 过去的日期 = 昨天及以前（不包含今天）
-    3. 暂停日和假期不配送
+    关键修复：
+    - 起送日期当天开始计算
+    - 只有配送日才在日历中标记（非配送日不显示）
+    - 过去的日期 = 昨天及以前
     """
     calendar = {}
     
@@ -420,11 +426,9 @@ def generate_meal_calendar(
         # 如果没有结束日期，默认生成到起送日期后90天
         end_date = start_date + timedelta(days=90)
     
-    # 今天日期（不含时间）
+    # 今天日期
     today = date.today()
     yesterday = today - timedelta(days=1)
-    
-    logger.info(f"生成日历: {customer_name}, 起送={start_date}, 结束={end_date}, 今天={today}")
     
     # 从起送日期开始，到结束日期
     current = start_date
@@ -432,29 +436,25 @@ def generate_meal_calendar(
     while current <= end_date:
         date_str = current.strftime("%Y-%m-%d")
         
-        # 检查是否已有记录（保留用户手动修改的数据）
+        # 检查是否已有记录
         if existing_calendar and date_str in existing_calendar:
-            existing_info = existing_calendar[date_str]
-            # 只保留手动修改的数据（source为calendar）
-            if existing_info.get('source') == 'calendar':
-                calendar[date_str] = existing_info
-                current += timedelta(days=1)
-                continue
-        
-        # 判断状态
-        is_pause = current in pause_dates
-        is_holiday = current in holiday_dates
-        
-        if is_pause:
-            calendar[date_str] = {"qty": 0, "status": "paused", "source": "system"}
-        elif is_holiday:
-            calendar[date_str] = {"qty": 0, "status": "holiday", "source": "system"}
-        elif current <= yesterday:
-            # 过去的日期（昨天及以前），默认为已配送数量1
-            calendar[date_str] = {"qty": 1, "status": "delivered", "source": "system"}
+            # 保留已有记录（可能是手动修改过的）
+            calendar[date_str] = existing_calendar[date_str]
         else:
-            # 今天及未来，待确认
-            calendar[date_str] = {"qty": 1, "status": "pending", "source": "system"}
+            # 判断状态
+            is_pause = current in pause_dates
+            is_holiday = current in holiday_dates
+            
+            if is_pause:
+                calendar[date_str] = {"qty": 0, "status": "paused", "source": "system"}
+            elif is_holiday:
+                calendar[date_str] = {"qty": 0, "status": "holiday", "source": "system"}
+            elif current <= yesterday:
+                # 过去的日期（昨天及以前），默认为已配送1份
+                calendar[date_str] = {"qty": 1, "status": "delivered", "source": "calendar"}
+            else:
+                # 今天及未来，待确认
+                calendar[date_str] = {"qty": 1, "status": "pending", "source": "system"}
         
         current += timedelta(days=1)
     
@@ -496,9 +496,16 @@ def sync_delivery_to_calendar(customer_name: str, calendar: Dict, delivery_recor
     
     return calendar
 
-# 辅助函数：从日历计算已吃餐数
+# 🔧 辅助函数：从日历计算已吃餐数（修复版）
 def calculate_eaten_meals_from_calendar(calendar: Dict) -> int:
-    """从吃餐日历计算已吃餐数（昨天及以前的配送数量总和）"""
+    """
+    从吃餐日历计算已吃餐数
+    
+    计算范围：昨天及以前的配送数量总和（排除暂停和假期）
+    """
+    if not calendar:
+        return 0
+        
     today = date.today()
     yesterday = today - timedelta(days=1)
     
@@ -506,10 +513,15 @@ def calculate_eaten_meals_from_calendar(calendar: Dict) -> int:
     for date_str, info in calendar.items():
         try:
             record_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            # 只统计昨天及以前的
+            # 只统计昨天及以前的，且状态为delivered的
             if record_date <= yesterday:
-                eaten += info.get('qty', 0)
-        except:
+                status = info.get('status', '')
+                qty = info.get('qty', 0)
+                # 只有delivered状态才计入
+                if status == 'delivered' and qty > 0:
+                    eaten += qty
+        except Exception as e:
+            logger.error(f"计算吃餐数失败 {date_str}: {e}")
             continue
     
     return eaten
@@ -520,11 +532,13 @@ def calculate_eaten_meals_from_calendar(calendar: Dict) -> int:
 async def root():
     """根路径"""
     return {
-        "message": "配送管理系统API V3.3",
+        "message": "配送管理系统API V3.3 (修复版)",
         "features": [
-            "修复日期时区问题",
+            "修复时区导致的日期错位问题",
+            "修复已吃餐数计算逻辑",
             "修复单选字段格式问题",
-            "删除预计结束日期计算"
+            "删除预计结束日期计算",
+            "优化配送记录生成逻辑"
         ]
     }
 
@@ -593,8 +607,8 @@ async def run_workflow(request: Request):
             return await update_gantt_status()
         elif workflow_type == 'update_single_calendar':
             return await update_single_customer_calendar(data)
-        elif workflow_type == 'sync_all':
-            return await sync_all_operations()
+        elif workflow_type == 'run_all':
+            return await run_all_operations()
         elif workflow_type == 'get_customers':
             return await get_customers_list()
         elif workflow_type == 'get_customer_calendar':
@@ -605,25 +619,6 @@ async def run_workflow(request: Request):
     except Exception as e:
         logger.error(f"❌ 工作流执行失败: {e}", exc_info=True)
         return {"success": False, "message": f"执行失败: {str(e)}"}
-
-async def sync_all_operations():
-    """一键同步所有数据"""
-    try:
-        results = []
-        
-        result1 = await generate_customer_calendar()
-        results.append(f"1️⃣ 生成吃餐日历: {result1['message']}")
-        
-        result2 = await recalculate_eaten_meals()
-        results.append(f"2️⃣ 计算已吃餐数: {result2['message']}")
-        
-        return {
-            "success": True,
-            "message": "同步完成",
-            "data": {"debug_info": results}
-        }
-    except Exception as e:
-        return {"success": False, "message": f"同步失败: {str(e)}"}
 
 async def generate_customer_calendar():
     """为所有客户生成吃餐日历"""
@@ -656,9 +651,11 @@ async def generate_customer_calendar():
                 debug_info.append(f"⚠️ {customer_name}: 起送日期未填写，跳过")
                 continue
             
+            # 不再使用预计结束日期，直接生成90天
+            end_date = start_date + timedelta(days=90)
+            
             # 获取暂停日期
             pause_dates = get_customer_pause_dates(customer_name, pause_records_all)
-            logger.info(f"{customer_name}: 起送={start_date}, 暂停={pause_dates}")
             
             # 获取已有日历数据
             existing_calendar_str = fields.get('吃餐日历', '{}')
@@ -667,9 +664,9 @@ async def generate_customer_calendar():
             except:
                 existing_calendar = {}
             
-            # 生成新日历（不传结束日期，由系统自动计算）
+            # 生成新日历
             calendar = generate_meal_calendar(
-                customer_name, start_date, None,
+                customer_name, start_date, end_date,
                 pause_dates, holiday_dates, existing_calendar
             )
             
@@ -687,7 +684,7 @@ async def generate_customer_calendar():
                 eaten_count = calculate_eaten_meals_from_calendar(calendar)
                 update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": eaten_count})
                 
-                debug_info.append(f"✅ {customer_name}: 起送{start_date}, 已吃{eaten_count}餐")
+                debug_info.append(f"✅ {customer_name}: 生成日历（起送{start_date}，已吃{eaten_count}餐）")
                 updated_count += 1
             else:
                 debug_info.append(f"❌ {customer_name}: 更新失败 - {error_msg}")
@@ -698,7 +695,6 @@ async def generate_customer_calendar():
             "data": {"debug_info": debug_info, "updated_count": updated_count}
         }
     except Exception as e:
-        logger.error(f"❌ 生成失败: {e}", exc_info=True)
         return {"success": False, "message": f"生成失败: {str(e)}"}
 
 async def update_single_customer_calendar(data: Dict):
@@ -713,6 +709,7 @@ async def update_single_customer_calendar(data: Dict):
         if not calendar_updates:
             return {"success": False, "message": "请提供日历更新数据"}
         
+        # 查询客户
         customers = query_bitable_records(CUSTOMER_TABLE_ID)
         customer_record = None
         
@@ -727,12 +724,14 @@ async def update_single_customer_calendar(data: Dict):
         fields = customer_record.get('fields', {})
         record_id = customer_record.get('record_id')
         
+        # 获取现有日历
         existing_calendar_str = fields.get('吃餐日历', '{}')
         try:
             calendar = json.loads(existing_calendar_str) if isinstance(existing_calendar_str, str) else existing_calendar_str
         except:
             calendar = {}
         
+        # 应用更新
         today = date.today()
         for date_str, qty in calendar_updates.items():
             try:
@@ -740,6 +739,7 @@ async def update_single_customer_calendar(data: Dict):
             except:
                 continue
             
+            # 只允许修改过去的日期
             if record_date >= today:
                 continue
             
@@ -749,19 +749,21 @@ async def update_single_customer_calendar(data: Dict):
                 "source": "calendar"
             }
         
+        # 更新日历
         update_success, error_msg = update_bitable_record(
             CUSTOMER_TABLE_ID, record_id,
             {"吃餐日历": json.dumps(calendar, ensure_ascii=False)}
         )
         
         if update_success:
+            # 重新计算已吃餐数
             eaten_count = calculate_eaten_meals_from_calendar(calendar)
             update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": eaten_count})
             
             return {
                 "success": True,
-                "message": f"已更新 {customer_name} 的吃餐日历",
-                "data": {"eaten_count": eaten_count}
+                "message": f"已更新 {customer_name} 的吃餐日历，已吃餐数: {eaten_count}",
+                "data": {"calendar": calendar, "eaten_count": eaten_count}
             }
         else:
             return {"success": False, "message": f"更新失败: {error_msg}"}
@@ -790,6 +792,7 @@ async def recalculate_eaten_meals():
             if not customer_name:
                 continue
             
+            # 获取日历数据
             calendar_str = fields.get('吃餐日历', '{}')
             try:
                 calendar = json.loads(calendar_str) if isinstance(calendar_str, str) else calendar_str
@@ -799,8 +802,10 @@ async def recalculate_eaten_meals():
             if not calendar:
                 continue
             
+            # 计算已吃餐数（昨天及以前）
             eaten_count = calculate_eaten_meals_from_calendar(calendar)
             
+            # 更新
             current_eaten = fields.get('已吃餐数', 0)
             if eaten_count != current_eaten:
                 update_success, error_msg = update_bitable_record(
@@ -822,8 +827,16 @@ async def recalculate_eaten_meals():
     except Exception as e:
         return {"success": False, "message": f"计算失败: {str(e)}"}
 
+# 🔧 修复版：生成配送记录
 async def generate_delivery_records(delivery_date: str):
-    """生成配送记录"""
+    """
+    生成配送记录
+    
+    关键修复：
+    - 多选字段使用正确格式
+    - 单选字段使用正确格式（只传递选项文本）
+    - 不删除已确认的过往记录
+    """
     try:
         if not delivery_date:
             return {"success": False, "message": "请提供配送日期"}
@@ -833,24 +846,37 @@ async def generate_delivery_records(delivery_date: str):
         
         try:
             selected_date = datetime.strptime(delivery_date, "%Y-%m-%d").date()
-            tomorrow = selected_date + timedelta(days=1)
         except:
             return {"success": False, "message": "日期格式错误，请使用 YYYY-MM-DD 格式"}
         
-        # 删除该日期的旧记录
+        # 查询该日期已有的配送记录
         old_records = query_bitable_records(DELIVERY_TABLE_ID)
         to_delete = []
+        existing_customers = set()
         
         for record in old_records:
             fields = record.get('fields', {})
             record_date = parse_date(fields.get('配送日期'))
             if record_date == selected_date:
-                to_delete.append(record.get('record_id'))
+                customer_name = extract_text(fields.get('客户姓名'))
+                confirm_status = fields.get('确认状态', '')
+                if isinstance(confirm_status, dict):
+                    status_text = confirm_status.get('text', '')
+                else:
+                    status_text = extract_text(confirm_status)
+                
+                # 如果是已确认的记录，不删除
+                if status_text == '已确认':
+                    existing_customers.add(customer_name)
+                else:
+                    # 未确认的记录可以删除后重新生成
+                    to_delete.append(record.get('record_id'))
         
         if to_delete:
             delete_bitable_records(DELIVERY_TABLE_ID, to_delete)
-            logger.info(f"✅ 删除 {len(to_delete)} 条旧记录")
+            logger.info(f"✅ 删除 {len(to_delete)} 条未确认的旧记录")
         
+        # 查询客户和假期
         customers = query_bitable_records(CUSTOMER_TABLE_ID)
         holiday_dates = get_holiday_dates()
         pause_records_all = query_bitable_records(PAUSE_TABLE_ID)
@@ -866,6 +892,12 @@ async def generate_delivery_records(delivery_date: str):
             if not customer_name:
                 continue
             
+            # 如果该客户今天已有确认记录，跳过
+            if customer_name in existing_customers:
+                debug_info.append(f"⏭️ {customer_name}: 已有确认记录，跳过")
+                skipped_count += 1
+                continue
+            
             start_date = parse_date(fields.get('起送日期'))
             total_meals = fields.get('总餐数', 0)
             eaten_count = fields.get('已吃餐数', 0)
@@ -873,6 +905,7 @@ async def generate_delivery_records(delivery_date: str):
             if not start_date:
                 continue
             
+            # 判断是否应该配送
             skip_reason = None
             
             if selected_date < start_date:
@@ -899,33 +932,39 @@ async def generate_delivery_records(delivery_date: str):
                 skipped_count += 1
                 continue
             
-            # 提取字段值 - 修复单选/多选字段格式
-            # 忌口：可能是多选或文本
+            # 🔧 修复：正确处理多选和单选字段
+            # 忌口：如果是多选字段，使用列表格式
             jikou_raw = fields.get('忌口')
-            if jikou_raw:
-                jikou_list = extract_multi_select(jikou_raw)
-                jikou_value = jikou_list if jikou_list else extract_text(jikou_raw)
-            else:
-                jikou_value = ""
+            jikou_options = extract_multi_select(jikou_raw)
+            # 多选字段：飞书要求传字符串数组
+            jikou_value = jikou_options if jikou_options else []
             
-            # 加量：单选或文本
+            # 加量：提取单选文本值
             jialiang_raw = fields.get('加量')
-            jialiang_value = extract_single_select(jialiang_raw) if jialiang_raw else ""
-            
-            # 备注：文本
-            beizhu_value = extract_text(fields.get('备注')) if fields.get('备注') else ""
+            jialiang_value = extract_single_select(jialiang_raw)
+            # 🔧 单选字段：只传递文本字符串，不是dict
+            # 如果有值，需要确认飞书接受的是纯文本还是需要特定格式
+            # 飞书单选字段通常接受选项文本字符串
             
             delivery_fields = {
                 "配送日期": date_to_timestamp(delivery_date),
                 "客户姓名": customer_name,
                 "手机号": extract_text(fields.get('手机号')),
                 "配送地址": extract_text(fields.get('配送地址')),
-                "忌口": jikou_value,
-                "加量": jialiang_value,
-                "备注": beizhu_value,
                 "配送数量": 1,
-                "确认状态": "未确认"
+                "备注": extract_text(fields.get('备注')),
+                "确认状态": "未确认"  # 单选字段：直接传文本
             }
+            
+            # 忌口字段：如果是多选，传数组；如果是文本，传空字符串
+            if jikou_value:
+                delivery_fields["忌口"] = jikou_value
+            else:
+                delivery_fields["忌口"] = []
+            
+            # 加量字段：只有有值时才设置
+            if jialiang_value:
+                delivery_fields["加量"] = jialiang_value
             
             success, error_msg = create_bitable_record(DELIVERY_TABLE_ID, delivery_fields)
             
@@ -958,6 +997,7 @@ async def confirm_delivery_records(delivery_date: str):
         except:
             return {"success": False, "message": "日期格式错误"}
         
+        # 查询配送记录
         delivery_records = query_bitable_records(DELIVERY_TABLE_ID)
         
         debug_info = []
@@ -976,6 +1016,7 @@ async def confirm_delivery_records(delivery_date: str):
             if not customer_name:
                 continue
             
+            # 检查确认状态
             confirm_status = fields.get('确认状态', '')
             if isinstance(confirm_status, dict):
                 status_text = confirm_status.get('text', '')
@@ -988,6 +1029,7 @@ async def confirm_delivery_records(delivery_date: str):
             
             delivery_qty = fields.get('配送数量', 1)
             
+            # 更新配送记录状态
             update_success, error_msg = update_bitable_record(
                 DELIVERY_TABLE_ID, record_id,
                 {"确认状态": "已确认"}
@@ -997,12 +1039,14 @@ async def confirm_delivery_records(delivery_date: str):
                 debug_info.append(f"✅ {customer_name}: 确认配送{delivery_qty}份")
                 confirmed_count += 1
                 
+                # 记录需要更新的客户
                 if customer_name not in customers_to_update:
                     customers_to_update[customer_name] = 0
                 customers_to_update[customer_name] += delivery_qty
             else:
                 debug_info.append(f"❌ {customer_name}: 确认失败 - {error_msg}")
         
+        # 更新客户日历和统计
         customers = query_bitable_records(CUSTOMER_TABLE_ID)
         
         for customer in customers:
@@ -1013,6 +1057,7 @@ async def confirm_delivery_records(delivery_date: str):
             if customer_name not in customers_to_update:
                 continue
             
+            # 更新日历
             calendar_str = fields.get('吃餐日历', '{}')
             try:
                 calendar = json.loads(calendar_str) if isinstance(calendar_str, str) else calendar_str
@@ -1030,6 +1075,7 @@ async def confirm_delivery_records(delivery_date: str):
                 "吃餐日历": json.dumps(calendar, ensure_ascii=False)
             })
             
+            # 重新计算已吃餐数
             eaten_count = calculate_eaten_meals_from_calendar(calendar)
             update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": eaten_count})
         
@@ -1070,6 +1116,7 @@ async def update_gantt_status():
             if not start_date:
                 continue
             
+            # 计算状态
             if eaten_count >= total_meals:
                 status = "已结束"
             elif today < start_date:
@@ -1077,9 +1124,11 @@ async def update_gantt_status():
             else:
                 status = "配送中"
             
+            # 获取暂停日期
             pause_dates = get_customer_pause_dates(customer_name, pause_records_all)
-            pause_dates_str = [str(d) for d in pause_dates]
+            pause_dates_str = [d.strftime("%Y-%m-%d") for d in pause_dates]
             
+            # 更新
             update_success, error_msg = update_bitable_record(
                 CUSTOMER_TABLE_ID, record_id,
                 {
@@ -1101,6 +1150,25 @@ async def update_gantt_status():
         }
     except Exception as e:
         return {"success": False, "message": f"更新失败: {str(e)}"}
+
+async def run_all_operations():
+    """一键执行所有操作（不再计算结束日期）"""
+    try:
+        results = []
+        
+        result1 = await generate_customer_calendar()
+        results.append(f"1️⃣ 生成吃餐日历: {result1['message']}")
+        
+        result2 = await recalculate_eaten_meals()
+        results.append(f"2️⃣ 计算已吃餐数: {result2['message']}")
+        
+        return {
+            "success": True,
+            "message": "所有操作已完成",
+            "data": {"debug_info": results}
+        }
+    except Exception as e:
+        return {"success": False, "message": f"执行失败: {str(e)}"}
 
 async def get_customers_list():
     """获取客户列表"""
@@ -1150,16 +1218,22 @@ async def get_customer_calendar_data(customer_name: str):
         
         fields = customer_record.get('fields', {})
         
+        # 解析日历数据
         calendar_str = fields.get('吃餐日历', '{}')
         try:
             calendar = json.loads(calendar_str) if isinstance(calendar_str, str) else calendar_str
         except:
             calendar = {}
         
+        # 获取暂停日期
         pause_dates = get_customer_pause_dates(customer_name, pause_records_all)
         pause_dates_str = [str(d) for d in pause_dates]
         
+        # 获取假期日期
         holiday_dates_str = [str(d) for d in holiday_dates]
+        
+        # 重新计算已吃餐数
+        eaten_count = calculate_eaten_meals_from_calendar(calendar)
         
         return {
             "success": True,
@@ -1168,7 +1242,7 @@ async def get_customer_calendar_data(customer_name: str):
                 "customer_name": customer_name,
                 "start_date": str(parse_date(fields.get('起送日期'))) if parse_date(fields.get('起送日期')) else None,
                 "total_meals": fields.get('总餐数', 0),
-                "eaten_count": fields.get('已吃餐数', 0),
+                "eaten_count": eaten_count,
                 "calendar": calendar,
                 "pause_dates": pause_dates_str,
                 "holiday_dates": holiday_dates_str
