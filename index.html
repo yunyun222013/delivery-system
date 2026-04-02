@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍱 配送管理系统 V3.1</title>
+    <title>🍱 配送管理系统 V3.2</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -50,364 +50,530 @@
             color: white; 
             border: none; 
             border-radius: 8px; 
-            font-size: 1em; 
+            font-size: 1.1em; 
             font-weight: 600; 
             cursor: pointer; 
-            margin-top: 10px; 
+            transition: transform 0.2s; 
         }
         .login-btn:hover { transform: translateY(-2px); }
         .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .error-msg { 
-            color: #e74c3c; 
-            background: #fde8e8; 
-            padding: 12px; 
-            border-radius: 8px; 
-            margin-bottom: 20px; 
-            font-size: 0.9em; 
-            display: none; 
-        }
-        .success-msg { 
-            color: #27ae60; 
-            background: #e8f5e9; 
-            padding: 12px; 
-            border-radius: 8px; 
-            margin-bottom: 20px; 
-            font-size: 0.9em; 
-            display: none; 
-        }
         .config-section { 
-            margin-top: 30px; 
+            margin-top: 20px; 
             padding-top: 20px; 
-            border-top: 1px solid #e0e0e0; 
+            border-top: 1px solid #eee; 
         }
-        .config-section h3 { color: #667eea; margin-bottom: 15px; font-size: 1em; }
+        .config-section h3 { 
+            font-size: 0.9em; 
+            color: #999; 
+            margin-bottom: 10px; 
+        }
         .config-section input { 
             width: 100%; 
-            padding: 10px 12px; 
-            border: 2px solid #e0e0e0; 
-            border-radius: 8px; 
-            font-size: 0.9em; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
             margin-bottom: 10px; 
         }
         .config-btn { 
             width: 100%; 
             padding: 10px; 
-            background: #11998e; 
-            color: white; 
+            background: #f0f0f0; 
             border: none; 
-            border-radius: 8px; 
-            font-size: 0.9em; 
-            font-weight: 600; 
+            border-radius: 6px; 
             cursor: pointer; 
         }
+        .config-btn:hover { background: #e0e0e0; }
         
         /* 主页面 */
-        .main-body { padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        header { 
-            text-align: center; 
-            color: white; 
-            margin-bottom: 30px; 
-            padding: 20px; 
-            background: rgba(255,255,255,0.1); 
-            border-radius: 15px; 
-        }
-        header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        header p { font-size: 1.1em; opacity: 0.95; }
-        
-        /* 工作流程卡片 */
-        .workflow-card {
+        .user-info {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .workflow-card h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+            padding: 12px 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
         }
-        
-        /* 流程步骤 */
-        .flow-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
         }
-        .flow-step {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 12px;
-            padding: 15px;
-            position: relative;
-            border-left: 4px solid #667eea;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        .flow-step-number {
-            position: absolute;
-            top: -10px;
-            left: -10px;
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 600;
+        }
+        .logout-btn {
+            margin-left: auto;
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 0.9em;
         }
-        .flow-step h3 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 1em;
+        .logout-btn:hover { background: #dc2626; }
+        
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 80px 20px 20px; 
         }
-        .flow-step p {
-            color: #666;
-            font-size: 0.85em;
-            line-height: 1.5;
+        header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            color: white; 
         }
-        .flow-step-code {
-            background: rgba(0,0,0,0.05);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.8em;
-            color: #e74c3c;
-            display: inline-block;
-            margin-top: 8px;
+        header h1 { 
+            font-size: 2.2em; 
+            margin-bottom: 8px; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+        }
+        header p { 
+            font-size: 1.1em; 
+            opacity: 0.9; 
         }
         
-        /* 分隔线 */
         .section-divider {
             text-align: center;
-            margin: 30px 0;
+            margin: 25px 0;
             position: relative;
         }
         .section-divider::before {
             content: '';
             position: absolute;
-            top: 50%;
             left: 0;
             right: 0;
-            height: 2px;
+            top: 50%;
+            height: 1px;
             background: rgba(255,255,255,0.3);
         }
         .section-divider span {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             padding: 8px 20px;
             border-radius: 20px;
+            color: white;
+            font-weight: 600;
             position: relative;
+            z-index: 1;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card p {
+            color: #666;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.9em;
             font-weight: 600;
         }
         
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); 
-            gap: 20px; 
-            margin-bottom: 30px; 
+        .input-group {
+            margin-bottom: 16px;
         }
-        .card { 
-            background: white; 
-            border-radius: 15px; 
-            padding: 25px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
-            transition: transform 0.3s ease; 
-            position: relative; 
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
         }
-        .card::before { 
-            content: ''; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            height: 4px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
         }
-        .card:hover { transform: translateY(-5px); }
-        .card h2 { 
-            color: #667eea; 
-            margin-bottom: 15px; 
-            font-size: 1.3em; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-        }
-        .card h2 .step-badge { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-            width: 36px; 
-            height: 36px; 
-            border-radius: 50%; 
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-        }
-        .card p { color: #666; margin-bottom: 20px; line-height: 1.6; }
-        
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
-        .input-group input[type="date"] { 
-            width: 100%; 
-            padding: 12px 15px; 
-            border: 2px solid #e0e0e0; 
-            border-radius: 8px; 
-            font-size: 1em; 
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
         }
         
-        .tip-box { 
-            padding: 12px 15px; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            font-size: 0.9em; 
-            display: flex; 
-            align-items: flex-start; 
-            gap: 10px; 
+        .tip-box {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
         }
-        .tip-box.warning { background: #fff8e1; border-left: 4px solid #ffa726; }
-        .tip-box.info { background: #e3f2fd; border-left: 4px solid #42a5f5; }
-        .tip-box.success { background: #e8f5e9; border-left: 4px solid #66bb6a; }
-        .tip-box.danger { background: #ffebee; border-left: 4px solid #ef5350; }
-        
-        button { 
-            width: 100%; 
-            padding: 15px 20px; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1em; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
+        .tip-box span {
+            font-size: 1.2em;
         }
-        button:active { transform: scale(0.98); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-primary { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
+        .tip-box.info {
+            background: #e0f2fe;
+            color: #0369a1;
         }
-        .btn-success { 
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
-            color: white; 
+        .tip-box.warning {
+            background: #fef3c7;
+            color: #92400e;
         }
-        .btn-warning { 
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
-            color: white; 
+        .tip-box.danger {
+            background: #fee2e2;
+            color: #991b1b;
         }
-        .btn-info { 
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-            color: white; 
+        .tip-box.success {
+            background: #dcfce7;
+            color: #166534;
         }
         
-        .result { margin-top: 15px; padding: 15px; border-radius: 8px; display: none; }
-        .result.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .result.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .result.loading { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #22c55e; color: white; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-info { background: #8b5cf6; color: white; }
+        .btn-info:hover { background: #7c3aed; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
         
-        .footer { 
-            text-align: center; 
-            color: white; 
-            margin-top: 30px; 
-            padding: 20px; 
-            background: rgba(255,255,255,0.1); 
-            border-radius: 15px; 
+        .result {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: none;
         }
-        .footer p { margin: 5px 0; opacity: 0.95; }
-        
-        .user-info { 
-            position: fixed; 
-            top: 20px; 
-            right: 20px; 
-            background: white; 
-            padding: 12px 20px; 
-            border-radius: 20px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            font-size: 0.9em; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            z-index: 1000; 
+        .result.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
         }
-        .user-avatar { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-            width: 36px; 
-            height: 36px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
+        .result.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
         }
-        .logout-btn { 
-            background: #e74c3c; 
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 15px; 
-            cursor: pointer; 
-            font-size: 0.9em; 
-            font-weight: 600; 
+        .result.loading {
+            display: block;
+            background: #f0f9ff;
+            color: #0369a1;
         }
         
-        .status-indicator { 
-            display: inline-block; 
-            width: 10px; 
-            height: 10px; 
-            border-radius: 50%; 
-            animation: pulse 2s infinite; 
+        /* 日历视图样式 */
+        .calendar-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 20px;
         }
-        .status-indicator.online { background: #66bb6a; }
-        .status-indicator.offline { background: #ef5350; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .calendar-header h3 {
+            font-size: 1.5em;
+            color: #333;
+        }
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+        .calendar-nav button {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .calendar-nav button:hover { background: #e0e0e0; }
+        
+        .calendar-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+        .calendar-info-item {
+            text-align: center;
+        }
+        .calendar-info-item .label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .calendar-info-item .value {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .calendar-legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        .legend-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .legend-dot.start { background: #22c55e; color: white; }
+        .legend-dot.pause { background: #f59e0b; color: white; }
+        .legend-dot.holiday { background: #ef4444; color: white; }
+        .legend-dot.delivered { background: #3b82f6; color: white; }
+        .legend-dot.pending { background: #9ca3af; color: white; }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .calendar-day-header {
+            text-align: center;
+            padding: 10px;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+        }
+        .calendar-day {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px;
+            min-height: 70px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover { 
+            background: #f0f9ff; 
+            border-color: #3b82f6;
+        }
+        .calendar-day.empty {
+            background: #f9fafb;
+            cursor: default;
+        }
+        .calendar-day.empty:hover {
+            background: #f9fafb;
+            border-color: #e0e0e0;
+        }
+        .calendar-day.today {
+            border-color: #3b82f6;
+            border-width: 2px;
+        }
+        .calendar-day .day-number {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .calendar-day .day-qty {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+            min-width: 28px;
+            text-align: center;
+        }
+        .calendar-day .day-qty.start { background: #22c55e; color: white; }
+        .calendar-day .day-qty.pause { background: #f59e0b; color: white; }
+        .calendar-day .day-qty.holiday { background: #ef4444; color: white; }
+        .calendar-day .day-qty.delivered { background: #3b82f6; color: white; }
+        .calendar-day .day-qty.pending { background: #9ca3af; color: white; }
+        
+        .calendar-edit {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            display: none;
+        }
+        .calendar-edit.active { display: block; }
+        .calendar-edit h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .calendar-edit-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .calendar-edit-row .input-group {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        /* 流程卡片 */
+        .workflow-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .workflow-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .flow-step {
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .flow-step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .flow-step h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        .flow-step p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .flow-step-code {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255,255,255,0.8);
+        }
+        .footer p {
+            margin-bottom: 8px;
+        }
         
         @media (max-width: 768px) {
             .grid { grid-template-columns: 1fr; }
-            .flow-steps { grid-template-columns: 1fr; }
-            .user-info { 
-                position: static; 
-                margin-bottom: 20px; 
-                border-radius: 15px; 
-            }
+            .calendar-info { grid-template-columns: repeat(2, 1fr); }
+            .calendar-edit-row { flex-direction: column; }
+            .calendar-edit-row .input-group { width: 100%; }
         }
     </style>
 </head>
-<body class="login-body" id="body">
+<body class="login-body">
     <!-- 登录页面 -->
-    <div id="loginPage">
-        <div class="login-container">
-            <div class="login-header">
-                <h1>🍱 配送管理系统</h1>
-                <p>请输入账号密码登录</p>
+    <div class="login-container" id="loginPage">
+        <div class="login-header">
+            <h1>🍱 配送管理系统</h1>
+            <p>V3.2 日历视图版</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" required autocomplete="username">
             </div>
             
-            <div class="error-msg" id="errorMsg"></div>
-            <div class="success-msg" id="successMsg"></div>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="username">👤 用户名</label>
-                    <input type="text" id="username" placeholder="请输入用户名" required autocomplete="username">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">🔑 密码</label>
-                    <input type="password" id="password" placeholder="请输入密码" required autocomplete="current-password">
-                </div>
-                
-                <button type="submit" class="login-btn" id="loginBtn">登录</button>
-            </form>
-            
-            <div class="config-section" id="configSection" style="display: none;">
-                <h3>⚙️ API配置（管理员设置）</h3>
-                <input type="text" id="apiUrlInput" placeholder="例如：https://your-api.render.com">
-                <button class="config-btn" onclick="saveApiUrl()">保存API地址</button>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="请输入密码" required autocomplete="current-password">
             </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">登录</button>
+        </form>
+        
+        <div class="config-section" id="configSection">
+            <h3>⚙️ API配置</h3>
+            <input type="text" id="apiUrlInput" placeholder="例如：https://your-api.render.com">
+            <button class="config-btn" onclick="saveApiUrl()">保存API地址</button>
+            <p style="font-size: 0.85em; color: #999; margin-top: 10px;">当前地址: <span id="currentApiUrl"></span></p>
         </div>
     </div>
     
@@ -425,8 +591,8 @@
 
         <div class="container">
             <header>
-                <h1>🍱 配送管理系统 V3.1</h1>
-                <p>吃餐日历双轨制管理</p>
+                <h1>🍱 配送管理系统 V3.2</h1>
+                <p>日历视图 · 可视化管理</p>
             </header>
             
             <div class="section-divider">
@@ -434,19 +600,39 @@
             </div>
             
             <div class="grid">
-                <!-- 新用户初始化 -->
+                <!-- 一键同步 -->
                 <div class="card">
-                    <h2><span class="step-badge">🌟</span> 生成吃餐日历</h2>
-                    <p>为所有客户生成吃餐日历，系统自动计算过去日期的配送情况，并设置默认值。</p>
-                    <div class="tip-box danger">
-                        <span>⚠️</span>
+                    <h2><span class="step-badge">🔄</span> 一键同步数据</h2>
+                    <p>同步暂停表、假期表，重新生成所有客户的吃餐日历，并重新计算统计数据。</p>
+                    <div class="tip-box warning">
+                        <span>📌</span>
                         <div>
-                            <strong>仅首次运行！</strong><br>
-                            生成后，过去的日期默认配送数量为1，可在飞书表格"吃餐日历"字段中修改
+                            <strong>点击时机：</strong><br>
+                            • 修改了暂停表（新增/删除暂停日期）<br>
+                            • 修改了假期表（新增/删除假期）<br>
+                            • 新增客户后初始化
                         </div>
                     </div>
-                    <button class="btn-warning" onclick="generateCalendar()">📅 生成吃餐日历</button>
-                    <div id="generateCalendarResult" class="result"></div>
+                    <div class="tip-box info">
+                        <span>💡</span>
+                        <div><strong>执行内容：</strong>生成吃餐日历 → 计算已吃餐数 → 计算结束日期</div>
+                    </div>
+                    <button class="btn-warning" onclick="syncAll()">🔄 一键同步所有数据</button>
+                    <div id="syncResult" class="result"></div>
+                </div>
+                
+                <!-- 日历视图 -->
+                <div class="card">
+                    <h2><span class="step-badge">📅</span> 查看客户日历</h2>
+                    <p>查看单个客户的吃餐日历，可视化展示配送情况，可修改过去的配送数量。</p>
+                    <div class="input-group">
+                        <label for="calendarCustomer">👤 选择客户：</label>
+                        <select id="calendarCustomer">
+                            <option value="">-- 请选择客户 --</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="loadCustomerCalendar()">📅 查看日历</button>
+                    <div id="calendarViewResult" class="result"></div>
                 </div>
                 
                 <!-- 生成配送记录 -->
@@ -459,7 +645,7 @@
                     </div>
                     <div class="tip-box info">
                         <span>📌</span>
-                        <div><strong>提示：</strong>选择明天的日期，生成的记录状态为"未确认"，可修改配送数量</div>
+                        <div><strong>提示：</strong>选择明天的日期，生成的记录状态为"未确认"</div>
                     </div>
                     <button class="btn-primary" onclick="generateRecords()">📋 生成配送记录</button>
                     <div id="generateResult" class="result"></div>
@@ -468,59 +654,94 @@
                 <!-- 批量确认 -->
                 <div class="card">
                     <h2><span class="step-badge">2</span> 批量确认配送</h2>
-                    <p>确认指定日期的所有配送记录，确认后自动同步到吃餐日历并更新统计数据。</p>
+                    <p>确认指定日期的所有配送记录，确认后自动同步到吃餐日历。</p>
                     <div class="input-group">
                         <label for="confirmDate">📅 配送日期：</label>
                         <input type="date" id="confirmDate" value="">
                     </div>
                     <div class="tip-box warning">
                         <span>⚠️</span>
-                        <div>
-                            <strong>注意：</strong>确认后配送数量将被锁定，并自动更新：<br>
-                            ✅ 已吃餐数<br>
-                            ✅ 预计结束日期<br>
-                            ✅ 吃餐日历
-                        </div>
+                        <div><strong>注意：</strong>确认后自动更新已吃餐数和预计结束日期</div>
                     </div>
                     <button class="btn-success" onclick="confirmDelivery()">✅ 批量确认配送</button>
                     <div id="confirmResult" class="result"></div>
                 </div>
                 
-                <!-- 重新计算 -->
-                <div class="card">
-                    <h2><span class="step-badge">3</span> 重新计算数据</h2>
-                    <p>根据吃餐日历重新计算已吃餐数，或根据最新数据计算预计结束日期。</p>
-                    <div class="tip-box info">
-                        <span>💡</span>
-                        <div><strong>触发时机：</strong>修改飞书表格中的"吃餐日历"字段后点击</div>
-                    </div>
-                    <button class="btn-info" onclick="recalculateEaten()" style="margin-bottom: 10px;">🔄 重新计算已吃餐数</button>
-                    <button class="btn-info" onclick="recalculateEndDate()">📅 重新计算预计结束日期</button>
-                    <div id="recalculateResult" class="result"></div>
-                </div>
-                
-                <!-- 一键执行 -->
-                <div class="card">
-                    <h2><span class="step-badge">⚡</span> 一键执行所有操作</h2>
-                    <p>按顺序执行所有计算和更新操作，适合每周一早上运行。</p>
-                    <div class="tip-box success">
-                        <span>🎯</span>
-                        <div><strong>执行内容：</strong><br>1. 生成吃餐日历<br>2. 计算已吃餐数<br>3. 计算预计结束日期</div>
-                    </div>
-                    <button class="btn-success" onclick="runAll()">🚀 一键执行所有操作</button>
-                    <div id="runAllResult" class="result"></div>
-                </div>
-                
                 <!-- 更新甘特图 -->
                 <div class="card">
                     <h2><span class="step-badge">📊</span> 更新甘特图状态</h2>
-                    <p>更新客户的配送状态和暂停日期字段，用于甘特图显示。</p>
-                    <div class="tip-box info">
-                        <span>📊</span>
-                        <div><strong>作用：</strong>更新飞书表格中的甘特图字段</div>
-                    </div>
-                    <button class="btn-primary" onclick="updateGantt()">📊 更新甘特图状态</button>
+                    <p>更新客户的配送状态字段，用于飞书表格中的甘特图显示。</p>
+                    <button class="btn-info" onclick="updateGantt()">📊 更新甘特图状态</button>
                     <div id="updateGanttResult" class="result"></div>
+                </div>
+            </div>
+            
+            <!-- 日历视图容器 -->
+            <div id="calendarContainer" class="calendar-container" style="display: none;">
+                <div class="calendar-header">
+                    <h3 id="calendarTitle">客户日历</h3>
+                    <div class="calendar-nav">
+                        <button onclick="prevMonth()">◀ 上月</button>
+                        <button onclick="nextMonth()">下月 ▶</button>
+                        <button onclick="closeCalendar()">✕ 关闭</button>
+                    </div>
+                </div>
+                
+                <div class="calendar-info">
+                    <div class="calendar-info-item">
+                        <div class="label">起送日期</div>
+                        <div class="value" id="infoStartDate">-</div>
+                    </div>
+                    <div class="calendar-info-item">
+                        <div class="label">预计结束</div>
+                        <div class="value" id="infoEndDate">-</div>
+                    </div>
+                    <div class="calendar-info-item">
+                        <div class="label">已吃/总餐</div>
+                        <div class="value" id="infoEaten">-</div>
+                    </div>
+                    <div class="calendar-info-item">
+                        <div class="label">剩余餐数</div>
+                        <div class="value" id="infoRemaining">-</div>
+                    </div>
+                </div>
+                
+                <div class="calendar-legend">
+                    <div class="legend-item"><div class="legend-dot start">🚀</div> 起送日</div>
+                    <div class="legend-item"><div class="legend-dot pause">⏸</div> 暂停日</div>
+                    <div class="legend-item"><div class="legend-dot holiday">🎉</div> 假期</div>
+                    <div class="legend-item"><div class="legend-dot delivered">1</div> 已确认（过去）</div>
+                    <div class="legend-item"><div class="legend-dot pending">1?</div> 待确认（今天/未来）</div>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- 日历内容动态生成 -->
+                </div>
+                
+                <div class="tip-box info" style="margin-top: 15px; margin-bottom: 15px;">
+                    <span>💡</span>
+                    <div>
+                        <strong>日历说明：</strong><br>
+                        • 数字（如 1、2）：已确认的配送数量，可点击修改<br>
+                        • 数字+问号（如 1?）：待确认状态，今晚点"批量确认"后生效<br>
+                        • 问号（?）：未来日期，待生成配送记录
+                    </div>
+                </div>
+                
+                <div class="calendar-edit" id="calendarEdit">
+                    <h4>📝 修改配送数量（仅限过去的日期）</h4>
+                    <div class="calendar-edit-row">
+                        <div class="input-group">
+                            <label>日期</label>
+                            <input type="date" id="editDate" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label>配送数量</label>
+                            <input type="number" id="editQty" value="1" min="0" max="10">
+                        </div>
+                        <button class="btn-warning" onclick="saveCalendarEdit()">💾 保存修改</button>
+                        <button class="btn-info" onclick="cancelCalendarEdit()">取消</button>
+                    </div>
                 </div>
             </div>
             
@@ -535,14 +756,14 @@
                     <div class="flow-step">
                         <div class="flow-step-number">1</div>
                         <h3>批量确认今天的配送记录</h3>
-                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
+                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数</p>
                         <span class="flow-step-code">晚上操作</span>
                     </div>
                     
                     <div class="flow-step">
                         <div class="flow-step-number">2</div>
                         <h3>生成明天的配送记录</h3>
-                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
+                        <p>选择明天的日期，点击"生成配送记录"</p>
                         <span class="flow-step-code">晚上操作</span>
                     </div>
                 </div>
@@ -554,62 +775,59 @@
                 <div class="flow-steps">
                     <div class="flow-step">
                         <div class="flow-step-number">1</div>
-                        <h3>生成今天的配送记录</h3>
-                        <p>选择今天的日期，点击"生成配送记录"，所有记录状态为"未确认"</p>
-                        <span class="flow-step-code">早上操作</span>
+                        <h3>填写客户信息</h3>
+                        <p>在飞书表格中填写客户基础信息</p>
                     </div>
                     
                     <div class="flow-step">
                         <div class="flow-step-number">2</div>
-                        <h3>在飞书表格中检查</h3>
-                        <p>打开配送记录表，检查/修改配送数量（此时仍可修改）</p>
-                        <span class="flow-step-code">白天操作</span>
+                        <h3>填写暂停表/假期表</h3>
+                        <p>如有需要，填写暂停日期和公共假期</p>
                     </div>
                     
                     <div class="flow-step">
                         <div class="flow-step-number">3</div>
-                        <h3>批量确认今天的记录</h3>
-                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数和预计结束日期</p>
-                        <span class="flow-step-code">晚上操作</span>
+                        <h3>点击一键同步</h3>
+                        <p>生成所有客户的吃餐日历</p>
+                        <span class="flow-step-code">重要！</span>
                     </div>
                     
                     <div class="flow-step">
                         <div class="flow-step-number">4</div>
-                        <h3>生成明天的配送记录</h3>
-                        <p>选择明天的日期，点击"生成配送记录"，为明天准备</p>
-                        <span class="flow-step-code">晚上操作</span>
+                        <h3>生成今天的配送记录</h3>
+                        <p>选择今天的日期，生成配送记录</p>
+                        <span class="flow-step-code">早上操作</span>
                     </div>
                 </div>
             </div>
             
-            <!-- 新用户流程 -->
+            <!-- 修改历史数据 -->
             <div class="workflow-card">
-                <h2>📋 新用户初始化流程（仅首次）</h2>
+                <h2>📝 修改历史数据流程</h2>
                 <div class="flow-steps">
                     <div class="flow-step">
                         <div class="flow-step-number">1</div>
-                        <h3>填写客户信息</h3>
-                        <p>在飞书表格中填写：客户姓名、手机号、配送地址、起送日期、总餐数等基础信息</p>
+                        <h3>点击"查看客户日历"</h3>
+                        <p>选择要修改的客户，点击"查看日历"</p>
                     </div>
                     
                     <div class="flow-step">
                         <div class="flow-step-number">2</div>
-                        <h3>更新暂停表/假期表</h3>
-                        <p>如果有暂停日期或公共假期，在对应表格中填写</p>
+                        <h3>点击要修改的日期</h3>
+                        <p>在日历中点击过去的日期（昨天及以前）</p>
                     </div>
                     
                     <div class="flow-step">
                         <div class="flow-step-number">3</div>
-                        <h3>生成吃餐日历</h3>
-                        <p>点击上方"生成吃餐日历"按钮，系统自动为过去日期填充默认值</p>
-                        <span class="flow-step-code">重要！</span>
+                        <h3>修改配送数量</h3>
+                        <p>输入新的配送数量，点击"保存修改"</p>
+                        <span class="flow-step-code">自动更新已吃餐数</span>
                     </div>
                 </div>
             </div>
             
             <div class="footer">
-                <p>💡 <strong>提示：</strong>操作完成后可在飞书多维表格中查看结果</p>
-                <p>📋 <strong>字段说明：</strong>"吃餐日历"字段存储JSON格式的日历数据，可直接在表格中查看和修改</p>
+                <p>💡 <strong>提示：</strong>修改暂停表/假期表后，请点击"一键同步"</p>
                 <p>📞 <strong>技术支持：</strong>遇到问题请联系管理员</p>
             </div>
         </div>
@@ -622,35 +840,20 @@
         // ==================== 全局变量 ====================
         let API_URL = localStorage.getItem('delivery_api_url') || DEFAULT_API_URL;
         let TOKEN = localStorage.getItem('delivery_token') || '';
+        let currentCustomerData = null;
+        let currentCalendarMonth = new Date();
         
         // ==================== 初始化 ====================
-        window.onload = function() {
-            loadConfig();
-            checkAuth();
-        };
-        
-        function loadConfig() {
-            const savedUser = localStorage.getItem('delivery_user');
-            
-            if (!localStorage.getItem('delivery_api_url')) {
-                document.getElementById('configSection').style.display = 'block';
-            }
-            
-            if (savedUser) {
-                const user = JSON.parse(savedUser);
-                document.getElementById('userName').textContent = user.username;
-                document.getElementById('userRole').textContent = user.role;
-                document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
-            }
-            
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('apiUrlInput').value = API_URL;
-        }
+            document.getElementById('currentApiUrl').textContent = API_URL;
+            
+            checkAuth();
+        });
         
         async function checkAuth() {
-            if (!TOKEN) {
-                showLoginPage();
-                return;
-            }
+            if (!TOKEN) return;
             
             try {
                 const response = await fetch(`${API_URL}/api/verify`, {
@@ -659,68 +862,76 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    showMainPage();
-                } else {
-                    localStorage.removeItem('delivery_token');
-                    showLoginPage();
+                    showMainPage(data.username, data.role);
                 }
-            } catch (error) {
-                console.log('Auth check failed:', error);
-                showLoginPage();
+            } catch (e) {
+                console.log('Token验证失败');
             }
         }
         
-        // ==================== 页面切换 ====================
-        function showLoginPage() {
-            document.getElementById('body').className = 'login-body';
-            document.getElementById('loginPage').style.display = 'block';
-            document.getElementById('mainPage').style.display = 'none';
-        }
-        
-        function showMainPage() {
-            document.getElementById('body').className = 'main-body';
+        function showMainPage(username, role) {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('mainPage').style.display = 'block';
+            document.body.classList.remove('login-body');
+            
+            document.getElementById('userName').textContent = username;
+            document.getElementById('userRole').textContent = role;
+            document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
+            
             setDefaultDates();
+            loadCustomerList();
         }
         
-        // ==================== 配置管理 ====================
-        function saveApiUrl() {
-            const url = document.getElementById('apiUrlInput').value.trim();
-            if (!url) {
-                alert('⚠️ 请输入API地址');
-                return;
-            }
+        function setDefaultDates() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
             
-            const cleanUrl = url.replace(/\/$/, '');
-            if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-                alert('⚠️ 请输入完整的URL地址（以http://或https://开头）');
-                return;
-            }
-            
-            localStorage.setItem('delivery_api_url', cleanUrl);
-            API_URL = cleanUrl;
-            
-            document.getElementById('configSection').style.display = 'none';
-            
-            showSuccess('✅ API地址已保存');
+            document.getElementById('generateDate').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('confirmDate').value = today.toISOString().split('T')[0];
         }
         
-        // ==================== 登录 ====================
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        async function loadCustomerList() {
+            try {
+                const response = await fetch(`${API_URL}/run`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${TOKEN}`
+                    },
+                    body: JSON.stringify({ workflow_type: 'get_customers' })
+                });
+                
+                const data = await response.json();
+                if (data.success && data.data && data.data.customers) {
+                    const select = document.getElementById('calendarCustomer');
+                    select.innerHTML = '<option value="">-- 请选择客户 --</option>';
+                    
+                    data.data.customers.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.name;
+                        option.textContent = c.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (e) {
+                console.log('加载客户列表失败');
+            }
+        }
+        
+        // ==================== 登录相关 ====================
+        async function handleLogin(e) {
             e.preventDefault();
             
-            const username = document.getElementById('username').value.trim();
+            const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
             if (!username || !password) {
-                showError('⚠️ 请输入用户名和密码');
+                alert('请输入用户名和密码');
                 return;
             }
             
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.disabled = true;
-            loginBtn.textContent = '登录中...';
+            document.getElementById('loginBtn').disabled = true;
             
             try {
                 const response = await fetch(`${API_URL}/api/login`, {
@@ -734,24 +945,36 @@
                 if (data.success) {
                     TOKEN = data.token;
                     localStorage.setItem('delivery_token', TOKEN);
-                    localStorage.setItem('delivery_user', JSON.stringify(data.user));
-                    
-                    document.getElementById('userName').textContent = data.user.username;
-                    document.getElementById('userRole').textContent = data.user.role;
-                    document.getElementById('userAvatar').textContent = data.user.username.charAt(0).toUpperCase();
-                    
-                    showSuccess('✅ 登录成功！');
-                    setTimeout(showMainPage, 500);
+                    showMainPage(username, data.role);
                 } else {
-                    showError(data.message || '登录失败');
+                    alert(data.detail || '登录失败');
                 }
             } catch (error) {
-                showError('❌ 连接失败，请检查API地址或网络连接');
+                alert('登录失败: ' + error.message);
             } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = '登录';
+                document.getElementById('loginBtn').disabled = false;
             }
-        });
+        }
+        
+        function saveApiUrl() {
+            const url = document.getElementById('apiUrlInput').value.trim();
+            if (!url) {
+                alert('请输入API地址');
+                return;
+            }
+            
+            let cleanUrl = url.replace(/\/$/, '');
+            if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+                cleanUrl = 'https://' + cleanUrl;
+            }
+            
+            localStorage.setItem('delivery_api_url', cleanUrl);
+            API_URL = cleanUrl;
+            
+            document.getElementById('currentApiUrl').textContent = cleanUrl;
+            document.getElementById('apiUrlInput').value = cleanUrl;
+            alert('✅ API地址已保存: ' + cleanUrl);
+        }
         
         function logout() {
             fetch(`${API_URL}/api/logout`, {
@@ -760,186 +983,373 @@
             }).catch(e => console.log('Logout error:', e));
             
             localStorage.removeItem('delivery_token');
-            localStorage.removeItem('delivery_user');
             TOKEN = '';
-            showLoginPage();
+            
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('mainPage').style.display = 'none';
+            document.body.classList.add('login-body');
         }
         
         // ==================== 工作流调用 ====================
-        async function callWorkflow(workflowType, deliveryDate = null) {
-            const body = { workflow_type: workflowType };
-            if (deliveryDate) body.delivery_date = deliveryDate;
-            
+        async function callWorkflow(type, extraData = {}) {
             const response = await fetch(`${API_URL}/run`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${TOKEN}`
                 },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ workflow_type: type, ...extraData })
             });
             
-            if (response.status === 401) {
-                logout();
-                return;
-            }
-            
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return await response.json();
         }
         
-        // ==================== 操作函数 ====================
-        async function generateCalendar() {
-            if (!confirm('确认生成所有客户的吃餐日历吗？\n\n⚠️ 这将为过去日期设置默认配送数量为1')) return;
+        function showLoading(elementId) {
+            const el = document.getElementById(elementId);
+            el.className = 'result loading';
+            el.textContent = '⏳ 处理中...';
+        }
+        
+        function showResult(elementId, data) {
+            const el = document.getElementById(elementId);
+            if (data.success) {
+                el.className = 'result success';
+                el.innerHTML = `<strong>✅ ${data.message}</strong>`;
+                if (data.data && data.data.debug_info) {
+                    el.innerHTML += `<br><small>${data.data.debug_info.slice(0, 5).join('<br>')}</small>`;
+                }
+            } else {
+                el.className = 'result error';
+                el.innerHTML = `<strong>❌ ${data.message}</strong>`;
+            }
+        }
+        
+        function showErrorResult(elementId, error) {
+            const el = document.getElementById(elementId);
+            el.className = 'result error';
+            el.innerHTML = `<strong>❌ 错误:</strong> ${error.message}`;
+        }
+        
+        // ==================== 业务功能 ====================
+        async function syncAll() {
+            if (!confirm('确认同步所有数据吗？这将重新生成所有客户的吃餐日历。')) return;
             
-            showLoading('generateCalendarResult');
-            try { 
-                const result = await callWorkflow('generate_calendar');
-                showResult('generateCalendarResult', result);
-            } catch (error) { 
-                showErrorResult('generateCalendarResult', error); 
+            showLoading('syncResult');
+            
+            try {
+                const results = [];
+                
+                results.push('1️⃣ 生成吃餐日历...');
+                const r1 = await callWorkflow('generate_calendar');
+                results.push(r1.success ? '✅ 完成' : '❌ 失败');
+                
+                results.push('2️⃣ 计算已吃餐数...');
+                const r2 = await callWorkflow('recalculate_eaten');
+                results.push(r2.success ? '✅ 完成' : '❌ 失败');
+                
+                results.push('3️⃣ 计算结束日期...');
+                const r3 = await callWorkflow('recalculate_end_date');
+                results.push(r3.success ? '✅ 完成' : '❌ 失败');
+                
+                const div = document.getElementById('syncResult');
+                div.className = 'result success';
+                div.innerHTML = `<strong>✅ 同步完成</strong><br>${results.join('<br>')}`;
+                
+                loadCustomerList();
+            } catch (error) {
+                showErrorResult('syncResult', error);
             }
         }
         
         async function generateRecords() {
             const date = document.getElementById('generateDate').value;
-            if (!date) { alert('⚠️ 请选择日期'); return; }
-            if (!confirm(`确认生成 ${date} 的配送记录吗？\n\n⚠️ 将删除该日期的旧记录`)) return;
+            if (!date) {
+                alert('请选择配送日期');
+                return;
+            }
             
             showLoading('generateResult');
-            try { 
-                const result = await callWorkflow('generate', date);
+            
+            try {
+                const result = await callWorkflow('generate_delivery', { delivery_date: date });
                 showResult('generateResult', result);
-            } catch (error) { 
-                showErrorResult('generateResult', error); 
+            } catch (error) {
+                showErrorResult('generateResult', error);
             }
         }
         
         async function confirmDelivery() {
             const date = document.getElementById('confirmDate').value;
-            if (!date) { alert('⚠️ 请选择日期'); return; }
-            if (!confirm(`确认批量确认 ${date} 的配送记录吗？\n\n⚠️ 确认后将锁定配送数量并自动更新已吃餐数`)) return;
+            if (!date) {
+                alert('请选择配送日期');
+                return;
+            }
+            
+            if (!confirm(`确认 ${date} 的所有配送记录吗？`)) return;
             
             showLoading('confirmResult');
-            try { 
-                const result = await callWorkflow('confirm', date);
-                showResult('confirmResult', result);
-            } catch (error) { 
-                showErrorResult('confirmResult', error); 
-            }
-        }
-        
-        async function recalculateEaten() {
-            showLoading('recalculateResult');
-            try { 
-                const result = await callWorkflow('recalculate_eaten');
-                showResult('recalculateResult', result);
-            } catch (error) { 
-                showErrorResult('recalculateResult', error); 
-            }
-        }
-        
-        async function recalculateEndDate() {
-            showLoading('recalculateResult');
-            try { 
-                const result = await callWorkflow('recalculate_end_date');
-                showResult('recalculateResult', result);
-            } catch (error) { 
-                showErrorResult('recalculateResult', error); 
-            }
-        }
-        
-        async function runAll() {
-            if (!confirm('确认执行所有操作吗？')) return;
             
-            showLoading('runAllResult');
             try {
-                const results = [];
-                
-                results.push('1️⃣ 生成吃餐日历...');
-                await callWorkflow('generate_calendar');
-                results.push('✅ 完成');
-                
-                results.push('2️⃣ 计算已吃餐数...');
-                await callWorkflow('recalculate_eaten');
-                results.push('✅ 完成');
-                
-                results.push('3️⃣ 计算预计结束日期...');
-                await callWorkflow('recalculate_end_date');
-                results.push('✅ 完成');
-                
-                const div = document.getElementById('runAllResult');
-                div.className = 'result success';
-                div.innerHTML = `<strong>✅ 全部完成</strong><br>${results.join('<br>')}`;
-            } catch (error) { 
-                showErrorResult('runAllResult', error); 
+                const result = await callWorkflow('confirm_delivery', { delivery_date: date });
+                showResult('confirmResult', result);
+            } catch (error) {
+                showErrorResult('confirmResult', error);
             }
         }
         
         async function updateGantt() {
             showLoading('updateGanttResult');
-            try { 
+            
+            try {
                 const result = await callWorkflow('update_gantt');
                 showResult('updateGanttResult', result);
-            } catch (error) { 
-                showErrorResult('updateGanttResult', error); 
+            } catch (error) {
+                showErrorResult('updateGanttResult', error);
             }
         }
         
-        // ==================== 工具函数 ====================
-        function setDefaultDates() {
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
+        // ==================== 日历视图功能 ====================
+        async function loadCustomerCalendar() {
+            const customerName = document.getElementById('calendarCustomer').value;
+            if (!customerName) {
+                alert('请选择客户');
+                return;
+            }
             
-            document.getElementById('generateDate').value = tomorrow.toISOString().split('T')[0];
-            document.getElementById('confirmDate').value = today.toISOString().split('T')[0];
-        }
-        
-        function showError(msg) {
-            const errorDiv = document.getElementById('errorMsg');
-            errorDiv.textContent = msg;
-            errorDiv.style.display = 'block';
-            document.getElementById('successMsg').style.display = 'none';
-        }
-        
-        function showSuccess(msg) {
-            const successDiv = document.getElementById('successMsg');
-            successDiv.textContent = msg;
-            successDiv.style.display = 'block';
-            document.getElementById('errorMsg').style.display = 'none';
-        }
-        
-        function showResult(elementId, data) {
-            const div = document.getElementById(elementId);
-            div.style.display = 'block';
+            showLoading('calendarViewResult');
             
-            if (data.success) {
-                div.className = 'result success';
-                let html = `<strong>✅ 成功</strong><br>${data.message}`;
-                if (data.data && data.data.debug_info) {
-                    html += `<details style="margin-top:10px;"><summary style="cursor:pointer;">详细信息 (${data.data.debug_info.length}条)</summary>`;
-                    html += `<div style="margin-top:10px;padding:10px;background:rgba(0,0,0,0.05);font-size:0.9em;max-height:200px;overflow-y:auto;">${data.data.debug_info.join('<br>')}</div></details>`;
+            try {
+                const response = await fetch(`${API_URL}/run`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        workflow_type: 'get_customer_calendar',
+                        customer_name: customerName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentCustomerData = data.data;
+                    currentCalendarMonth = new Date();
+                    
+                    document.getElementById('calendarTitle').textContent = `${customerName} 的吃餐日历`;
+                    document.getElementById('calendarContainer').style.display = 'block';
+                    
+                    // 显示客户信息
+                    document.getElementById('infoStartDate').textContent = currentCustomerData.start_date || '-';
+                    document.getElementById('infoEndDate').textContent = currentCustomerData.end_date || '-';
+                    document.getElementById('infoEaten').textContent = 
+                        `${currentCustomerData.eaten_count || 0}/${currentCustomerData.total_meals || 0}`;
+                    document.getElementById('infoRemaining').textContent = 
+                        (currentCustomerData.total_meals || 0) - (currentCustomerData.eaten_count || 0);
+                    
+                    renderCalendar();
+                    
+                    const resultEl = document.getElementById('calendarViewResult');
+                    resultEl.className = 'result success';
+                    resultEl.textContent = '✅ 日历已加载';
+                } else {
+                    showResult('calendarViewResult', data);
                 }
-                div.innerHTML = html;
-            } else {
-                div.className = 'result error';
-                div.innerHTML = `<strong>❌ 失败</strong><br>${data.message || '未知错误'}`;
+            } catch (error) {
+                showErrorResult('calendarViewResult', error);
             }
         }
         
-        function showLoading(elementId) {
-            const div = document.getElementById(elementId);
-            div.style.display = 'block';
-            div.className = 'result loading';
-            div.innerHTML = '<strong>⏳ 执行中...</strong>';
+        function renderCalendar() {
+            if (!currentCustomerData) return;
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            const year = currentCalendarMonth.getFullYear();
+            const month = currentCalendarMonth.getMonth();
+            
+            // 更新标题
+            document.getElementById('calendarTitle').textContent = 
+                `${currentCustomerData.customer_name} 的吃餐日历 - ${year}年${month + 1}月`;
+            
+            // 星期标题
+            const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+            weekdays.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // 计算月份第一天和最后一天
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDayOfWeek = (firstDay.getDay() + 6) % 7; // 调整为周一开始
+            
+            // 空白天数
+            for (let i = 0; i < startDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                grid.appendChild(emptyDay);
+            }
+            
+            // 日期
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const currentDate = new Date(year, month, day);
+                
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                
+                if (currentDate.getTime() === today.getTime()) {
+                    dayEl.classList.add('today');
+                }
+                
+                // 日期数字
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = day;
+                dayEl.appendChild(dayNumber);
+                
+                // 配送数量/状态
+                const dayQty = document.createElement('div');
+                dayQty.className = 'day-qty';
+                
+                // 检查是否是起送日
+                if (currentCustomerData.start_date === dateStr) {
+                    dayQty.classList.add('start');
+                    dayQty.textContent = '🚀';
+                }
+                // 检查是否是暂停日
+                else if (currentCustomerData.pause_dates && currentCustomerData.pause_dates.includes(dateStr)) {
+                    dayQty.classList.add('pause');
+                    dayQty.textContent = '⏸';
+                }
+                // 检查是否是假期
+                else if (currentCustomerData.holiday_dates && currentCustomerData.holiday_dates.includes(dateStr)) {
+                    dayQty.classList.add('holiday');
+                    dayQty.textContent = '🎉';
+                }
+                // 检查日历数据
+                else if (currentCustomerData.calendar && currentCustomerData.calendar[dateStr]) {
+                    const info = currentCustomerData.calendar[dateStr];
+                    const qty = info.qty;
+                    
+                    // 判断是过去还是今天/未来
+                    if (currentDate < today) {
+                        // 过去的日期：显示数字（已确认）
+                        dayQty.classList.add('delivered');
+                        dayQty.textContent = qty;
+                    } else {
+                        // 今天及未来：显示数字+问号（待确认）
+                        dayQty.classList.add('pending');
+                        dayQty.textContent = qty + '?';
+                    }
+                }
+                // 今天及未来，没有日历数据的
+                else if (currentDate >= today && currentCustomerData.start_date && dateStr >= currentCustomerData.start_date) {
+                    dayQty.classList.add('pending');
+                    dayQty.textContent = '?';
+                }
+                
+                dayEl.appendChild(dayQty);
+                
+                // 点击事件（只能点击过去的日期）
+                if (currentDate < today) {
+                    const currentQty = dayQty.textContent;
+                    dayEl.onclick = () => selectDateForEdit(dateStr, currentQty);
+                }
+                
+                grid.appendChild(dayEl);
+            }
         }
         
-        function showErrorResult(elementId, error) {
-            const div = document.getElementById(elementId);
-            div.style.display = 'block';
-            div.className = 'result error';
-            div.innerHTML = `<strong>❌ 失败</strong><br>${error.message || error}<br><small>请检查网络或联系管理员</small>`;
+        function prevMonth() {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1);
+            renderCalendar();
+        }
+        
+        function nextMonth() {
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1);
+            renderCalendar();
+        }
+        
+        function closeCalendar() {
+            document.getElementById('calendarContainer').style.display = 'none';
+        }
+        
+        function selectDateForEdit(dateStr, currentQty) {
+            if (!currentQty || currentQty === '🚀' || currentQty === '⏸' || currentQty === '🎉') {
+                currentQty = 1;
+            }
+            
+            document.getElementById('editDate').value = dateStr;
+            document.getElementById('editQty').value = parseInt(currentQty) || 1;
+            document.getElementById('calendarEdit').classList.add('active');
+        }
+        
+        function cancelCalendarEdit() {
+            document.getElementById('calendarEdit').classList.remove('active');
+        }
+        
+        async function saveCalendarEdit() {
+            const dateStr = document.getElementById('editDate').value;
+            const qty = parseInt(document.getElementById('editQty').value) || 1;
+            const customerName = currentCustomerData.customer_name;
+            
+            if (!confirm(`确认修改 ${customerName} 在 ${dateStr} 的配送数量为 ${qty} 份？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/run`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        workflow_type: 'update_single_calendar',
+                        customer_name: customerName,
+                        calendar_updates: { [dateStr]: qty }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ 修改成功！已吃餐数已更新。');
+                    
+                    // 更新本地数据
+                    if (!currentCustomerData.calendar) {
+                        currentCustomerData.calendar = {};
+                    }
+                    currentCustomerData.calendar[dateStr] = {
+                        qty: qty,
+                        status: qty > 0 ? 'delivered' : 'paused',
+                        source: 'calendar'
+                    };
+                    currentCustomerData.eaten_count = data.data.eaten_count;
+                    
+                    // 更新显示
+                    document.getElementById('infoEaten').textContent = 
+                        `${currentCustomerData.eaten_count}/${currentCustomerData.total_meals}`;
+                    document.getElementById('infoRemaining').textContent = 
+                        (currentCustomerData.total_meals || 0) - currentCustomerData.eaten_count;
+                    
+                    renderCalendar();
+                    cancelCalendarEdit();
+                } else {
+                    alert('❌ 修改失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ 修改失败: ' + error.message);
+            }
         }
     </script>
 </body>
