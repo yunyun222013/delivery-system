@@ -1,1482 +1,1289 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍱 配送管理系统 V3.3</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            min-height: 100vh; 
-        }
-        
-        /* 登录页面 */
-        .login-body { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px; 
-        }
-        .login-container { 
-            background: white; 
-            border-radius: 20px; 
-            padding: 40px; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
-            max-width: 420px; 
-            width: 100%; 
-        }
-        .login-header { text-align: center; margin-bottom: 30px; }
-        .login-header h1 { font-size: 2em; color: #667eea; margin-bottom: 10px; }
-        .login-header p { color: #666; font-size: 0.95em; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
-        .form-group input { 
-            width: 100%; 
-            padding: 12px 15px; 
-            border: 2px solid #e0e0e0; 
-            border-radius: 8px; 
-            font-size: 1em; 
-        }
-        .form-group input:focus { 
-            outline: none; 
-            border-color: #667eea; 
-        }
-        .login-btn { 
-            width: 100%; 
-            padding: 14px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1.1em; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: transform 0.2s; 
-        }
-        .login-btn:hover { transform: translateY(-2px); }
-        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .config-section { 
-            margin-top: 20px; 
-            padding-top: 20px; 
-            border-top: 1px solid #eee; 
-        }
-        .config-section h3 { 
-            font-size: 0.9em; 
-            color: #999; 
-            margin-bottom: 10px; 
-        }
-        .config-section input { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid #ddd; 
-            border-radius: 6px; 
-            margin-bottom: 10px; 
-        }
-        .config-btn { 
-            width: 100%; 
-            padding: 10px; 
-            background: #f0f0f0; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-        }
-        .config-btn:hover { background: #e0e0e0; }
-        
-        /* 主页面 */
-        .user-info {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-        .logout-btn {
-            margin-left: auto;
-            padding: 8px 16px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        .logout-btn:hover { background: #dc2626; }
-        
-        .container { 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            padding: 80px 20px 20px; 
-        }
-        header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            color: white; 
-        }
-        header h1 { 
-            font-size: 2.2em; 
-            margin-bottom: 8px; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2); 
-        }
-        header p { 
-            font-size: 1.1em; 
-            opacity: 0.9; 
-        }
-        
-        .section-divider {
-            text-align: center;
-            margin: 25px 0;
-            position: relative;
-        }
-        .section-divider::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 50%;
-            height: 1px;
-            background: rgba(255,255,255,0.3);
-        }
-        .section-divider span {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 8px 20px;
-            border-radius: 20px;
-            color: white;
-            font-weight: 600;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .card h2 {
-            color: #333;
-            margin-bottom: 16px;
-            font-size: 1.3em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card p {
-            color: #666;
-            margin-bottom: 16px;
-            line-height: 1.6;
-        }
-        .step-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
-        
-        .input-group {
-            margin-bottom: 16px;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .tip-box {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-        .tip-box span {
-            font-size: 1.2em;
-        }
-        .tip-box.info {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-        .tip-box.warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        .tip-box.danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .tip-box.success {
-            background: #dcfce7;
-            color: #166534;
-        }
-        
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        button:hover { transform: translateY(-2px); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-success { background: #22c55e; color: white; }
-        .btn-success:hover { background: #16a34a; }
-        .btn-warning { background: #f59e0b; color: white; }
-        .btn-warning:hover { background: #d97706; }
-        .btn-info { background: #8b5cf6; color: white; }
-        .btn-info:hover { background: #7c3aed; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
-        
-        .result {
-            margin-top: 16px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            display: none;
-        }
-        .result.success {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
-        }
-        .result.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .result.loading {
-            display: block;
-            background: #f0f9ff;
-            color: #0369a1;
-        }
-        
-        /* 日历视图样式 */
-        .calendar-container {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-top: 20px;
-        }
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .calendar-header h3 {
-            font-size: 1.5em;
-            color: #333;
-        }
-        .calendar-nav {
-            display: flex;
-            gap: 10px;
-        }
-        .calendar-nav button {
-            padding: 8px 16px;
-            background: #f0f0f0;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .calendar-nav button:hover { background: #e0e0e0; }
-        
-        .calendar-info {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 10px;
-        }
-        .calendar-info-item {
-            text-align: center;
-        }
-        .calendar-info-item .label {
-            font-size: 0.85em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        .calendar-info-item .value {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .calendar-legend {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85em;
-            color: #666;
-        }
-        .legend-dot {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75em;
-            font-weight: 600;
-        }
-        .legend-dot.start { background: #22c55e; color: white; }
-        .legend-dot.pause { background: #f59e0b; color: white; }
-        .legend-dot.holiday { background: #ef4444; color: white; }
-        .legend-dot.delivered { background: #3b82f6; color: white; }
-        .legend-dot.pending { background: #9ca3af; color: white; }
-        
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-        }
-        .calendar-day-header {
-            text-align: center;
-            padding: 10px;
-            font-weight: 600;
-            color: #666;
-            font-size: 0.9em;
-        }
-        .calendar-day {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 6px;
-            min-height: 65px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-        }
-        .calendar-day:hover { 
-            background: #f0f9ff; 
-            border-color: #3b82f6;
-        }
-        .calendar-day.empty {
-            background: #f9fafb;
-            cursor: default;
-        }
-        .calendar-day.empty:hover {
-            background: #f9fafb;
-            border-color: #e0e0e0;
-        }
-        .calendar-day.today {
-            border-color: #3b82f6;
-            border-width: 2px;
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
-        }
-        .calendar-day .day-number {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.9em;
-            margin-bottom: 4px;
-        }
-        .calendar-day .day-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: 600;
-            text-align: center;
-            margin-top: auto;
-        }
-        .calendar-day .day-badge.start { background: #22c55e; color: white; }
-        .calendar-day .day-badge.pause { background: #f59e0b; color: white; }
-        .calendar-day .day-badge.holiday { background: #ef4444; color: white; }
-        .calendar-day .day-badge.delivered { background: #3b82f6; color: white; }
-        .calendar-day .day-badge.pending { background: #9ca3af; color: white; }
-        
-        .calendar-edit {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 10px;
-            display: none;
-        }
-        .calendar-edit.active { display: block; }
-        .calendar-edit h4 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .calendar-edit-row {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-        .calendar-edit-row .input-group {
-            margin-bottom: 0;
-            flex: 1;
-            min-width: 150px;
-        }
-        
-        /* 甘特图样式 */
-        .gantt-container {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-top: 20px;
-            overflow-x: auto;
-        }
-        .gantt-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .gantt-header h3 {
-            font-size: 1.3em;
-            color: #333;
-        }
-        
-        .gantt-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85em;
-        }
-        .gantt-table th, .gantt-table td {
-            padding: 10px 8px;
-            text-align: center;
-            border: 1px solid #e0e0e0;
-        }
-        .gantt-table th {
-            background: #f8fafc;
-            font-weight: 600;
-            color: #333;
-            position: sticky;
-            top: 0;
-        }
-        .gantt-table th.customer-col {
-            position: sticky;
-            left: 0;
-            z-index: 2;
-            background: #f8fafc;
-            min-width: 100px;
-        }
-        .gantt-table td.customer-col {
-            position: sticky;
-            left: 0;
-            z-index: 1;
-            background: white;
-            text-align: left;
-            font-weight: 600;
-            min-width: 100px;
-        }
-        .gantt-table th.info-col {
-            min-width: 60px;
-        }
-        .gantt-table td.info-col {
-            font-weight: 600;
-        }
-        .gantt-table td.today-col {
-            background: #eff6ff;
-            border-left: 2px solid #3b82f6;
-            border-right: 2px solid #3b82f6;
-        }
-        
-        .gantt-day {
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.85em;
-        }
-        .gantt-day.start { background: #22c55e; color: white; }
-        .gantt-day.pause { background: #f59e0b; color: white; }
-        .gantt-day.holiday { background: #ef4444; color: white; }
-        .gantt-day.delivered { background: #3b82f6; color: white; }
-        .gantt-day.pending { background: #9ca3af; color: white; }
-        .gantt-day.empty { background: #f3f4f6; color: #9ca3af; }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-        .status-badge.active { background: #dcfce7; color: #166534; }
-        .status-badge.pending { background: #fef3c7; color: #92400e; }
-        .status-badge.ended { background: #fee2e2; color: #991b1b; }
-        
-        /* 流程卡片 */
-        .workflow-card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .workflow-card h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-        .flow-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        .flow-step {
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-        .flow-step-number {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        .flow-step h3 {
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-        }
-        .flow-step p {
-            color: #666;
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 30px;
-            color: rgba(255,255,255,0.8);
-        }
-        .footer p {
-            margin-bottom: 8px;
-        }
-        
-        @media (max-width: 768px) {
-            .grid { grid-template-columns: 1fr; }
-            .calendar-info { grid-template-columns: repeat(2, 1fr); }
-            .calendar-edit-row { flex-direction: column; }
-            .calendar-edit-row .input-group { width: 100%; }
-        }
-    </style>
-</head>
-<body class="login-body">
-    <!-- 登录页面 -->
-    <div class="login-container" id="loginPage">
-        <div class="login-header">
-            <h1>🍱 配送管理系统</h1>
-            <p>V3.3 修复版</p>
-        </div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">用户名</label>
-                <input type="text" id="username" placeholder="请输入用户名" required autocomplete="username">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">密码</label>
-                <input type="password" id="password" placeholder="请输入密码" required autocomplete="current-password">
-            </div>
-            
-            <button type="submit" class="login-btn" id="loginBtn">登录</button>
-        </form>
-        
-        <div class="config-section" id="configSection">
-            <h3>⚙️ API配置</h3>
-            <input type="text" id="apiUrlInput" placeholder="例如：https://your-api.render.com">
-            <button class="config-btn" onclick="saveApiUrl()">保存API地址</button>
-            <p style="font-size: 0.85em; color: #999; margin-top: 10px;">当前地址: <span id="currentApiUrl"></span></p>
-        </div>
-    </div>
-    
-    <!-- 主页面 -->
-    <div id="mainPage" style="display: none;">
-        <div class="user-info" id="userInfo">
-            <span class="status-indicator online"></span>
-            <div class="user-avatar" id="userAvatar">A</div>
-            <div>
-                <div style="font-weight: 600;" id="userName">管理员</div>
-                <div style="font-size: 0.85em; color: #666;" id="userRole">管理员</div>
-            </div>
-            <button class="logout-btn" onclick="logout()">登出</button>
-        </div>
+import os
+import json
+import secrets
+import logging
+from datetime import datetime, timedelta, date
+from typing import Optional, Dict, Any, List
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import requests
 
-        <div class="container">
-            <header>
-                <h1>🍱 配送管理系统 V3.3</h1>
-                <p>修复版 · 日期计算准确</p>
-            </header>
-            
-            <div class="section-divider">
-                <span>👇 功能操作区</span>
-            </div>
-            
-            <div class="grid">
-                <!-- 一键同步 -->
-                <div class="card">
-                    <h2><span class="step-badge">🔄</span> 一键同步数据</h2>
-                    <p>同步暂停表、假期表，重新生成所有客户的吃餐日历，并重新计算统计数据。</p>
-                    <div class="tip-box warning">
-                        <span>📌</span>
-                        <div>
-                            <strong>点击时机：</strong><br>
-                            • 修改了暂停表（新增/删除暂停日期）<br>
-                            • 修改了假期表（新增/删除假期）<br>
-                            • 新增客户后初始化
-                        </div>
-                    </div>
-                    <button class="btn-warning" onclick="syncAll()">🔄 一键同步所有数据</button>
-                    <div id="syncResult" class="result"></div>
-                </div>
-                
-                <!-- 查看甘特图 -->
-                <div class="card">
-                    <h2><span class="step-badge">📊</span> 查看甘特图</h2>
-                    <p>查看所有客户的配送状态，一目了然。显示起送日、暂停日、假期、配送数量等。</p>
-                    <button class="btn-info" onclick="loadGantt()">📊 查看甘特图</button>
-                    <div id="ganttResult" class="result"></div>
-                </div>
-                
-                <!-- 日历视图 -->
-                <div class="card">
-                    <h2><span class="step-badge">📅</span> 查看客户日历</h2>
-                    <p>查看单个客户的吃餐日历，可视化展示配送情况，可修改过去的配送数量。</p>
-                    <div class="input-group">
-                        <label for="calendarCustomer">👤 选择客户：</label>
-                        <select id="calendarCustomer">
-                            <option value="">-- 请选择客户 --</option>
-                        </select>
-                    </div>
-                    <button class="btn-primary" onclick="loadCustomerCalendar()">📅 查看日历</button>
-                    <div id="calendarViewResult" class="result"></div>
-                </div>
-                
-                <!-- 生成配送记录 -->
-                <div class="card">
-                    <h2><span class="step-badge">1</span> 生成配送记录</h2>
-                    <p>为指定日期生成配送记录，系统会自动删除旧记录并生成新记录。</p>
-                    <div class="input-group">
-                        <label for="generateDate">📅 配送日期：</label>
-                        <input type="date" id="generateDate" value="">
-                    </div>
-                    <button class="btn-primary" onclick="generateRecords()">📋 生成配送记录</button>
-                    <div id="generateResult" class="result"></div>
-                </div>
-                
-                <!-- 批量确认 -->
-                <div class="card">
-                    <h2><span class="step-badge">2</span> 批量确认配送</h2>
-                    <p>确认指定日期的所有配送记录，确认后自动同步到吃餐日历。</p>
-                    <div class="input-group">
-                        <label for="confirmDate">📅 配送日期：</label>
-                        <input type="date" id="confirmDate" value="">
-                    </div>
-                    <button class="btn-success" onclick="confirmDelivery()">✅ 批量确认配送</button>
-                    <div id="confirmResult" class="result"></div>
-                </div>
-            </div>
-            
-            <!-- 甘特图容器 -->
-            <div id="ganttContainer" class="gantt-container" style="display: none;">
-                <div class="gantt-header">
-                    <h3>📊 客户配送甘特图</h3>
-                    <div>
-                        <button onclick="refreshGantt()">🔄 刷新</button>
-                        <button onclick="closeGantt()" style="background: #f0f0f0; color: #333;">✕ 关闭</button>
-                    </div>
-                </div>
-                
-                <div class="calendar-legend" style="margin-bottom: 15px;">
-                    <div class="legend-item"><div class="legend-dot start">🚀</div> 起送日</div>
-                    <div class="legend-item"><div class="legend-dot pause">⏸</div> 暂停日</div>
-                    <div class="legend-item"><div class="legend-dot holiday">🎉</div> 假期</div>
-                    <div class="legend-item"><div class="legend-dot delivered">1</div> 已配送</div>
-                    <div class="legend-item"><div class="legend-dot pending">1?</div> 待确认</div>
-                </div>
-                
-                <div id="ganttTable" style="overflow-x: auto;">
-                    <!-- 甘特图内容动态生成 -->
-                </div>
-            </div>
-            
-            <!-- 日历视图容器 -->
-            <div id="calendarContainer" class="calendar-container" style="display: none;">
-                <div class="calendar-header">
-                    <h3 id="calendarTitle">客户日历</h3>
-                    <div class="calendar-nav">
-                        <button onclick="prevMonth()">◀ 上月</button>
-                        <button onclick="nextMonth()">下月 ▶</button>
-                        <button onclick="closeCalendar()">✕ 关闭</button>
-                    </div>
-                </div>
-                
-                <div class="calendar-info">
-                    <div class="calendar-info-item">
-                        <div class="label">起送日期</div>
-                        <div class="value" id="infoStartDate">-</div>
-                    </div>
-                    <div class="calendar-info-item">
-                        <div class="label">已吃/总餐</div>
-                        <div class="value" id="infoEaten">-</div>
-                    </div>
-                    <div class="calendar-info-item">
-                        <div class="label">剩余餐数</div>
-                        <div class="value" id="infoRemaining">-</div>
-                    </div>
-                </div>
-                
-                <div class="calendar-legend">
-                    <div class="legend-item"><div class="legend-dot start">🚀</div> 起送日</div>
-                    <div class="legend-item"><div class="legend-dot pause">⏸</div> 暂停日</div>
-                    <div class="legend-item"><div class="legend-dot holiday">🎉</div> 假期</div>
-                    <div class="legend-item"><div class="legend-dot delivered">1</div> 已确认</div>
-                    <div class="legend-item"><div class="legend-dot pending">1?</div> 待确认</div>
-                </div>
-                
-                <div class="calendar-grid" id="calendarGrid">
-                    <!-- 日历内容动态生成 -->
-                </div>
-                
-                <div class="calendar-edit" id="calendarEdit">
-                    <h4>📝 修改配送数量（仅限过去的日期）</h4>
-                    <div class="calendar-edit-row">
-                        <div class="input-group">
-                            <label>日期</label>
-                            <input type="date" id="editDate" readonly>
-                        </div>
-                        <div class="input-group">
-                            <label>配送数量</label>
-                            <input type="number" id="editQty" value="1" min="0" max="10">
-                        </div>
-                        <button class="btn-warning" onclick="saveCalendarEdit()">💾 保存修改</button>
-                        <button class="btn-info" onclick="cancelCalendarEdit()">取消</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer">
-                <p>💡 <strong>提示：</strong>修改暂停表/假期表后，请点击"一键同步"</p>
-                <p>📞 <strong>技术支持：</strong>遇到问题请联系管理员</p>
-            </div>
-        </div>
-    </div>
+# 配置日志
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# 环境变量
+FEISHU_APP_ID = os.getenv("FEISHU_APP_ID", "")
+FEISHU_APP_SECRET = os.getenv("FEISHU_APP_SECRET", "")
+BITABLE_APP_TOKEN = os.getenv("BITABLE_APP_TOKEN", "")
+CUSTOMER_TABLE_ID = os.getenv("CUSTOMER_TABLE_ID", "")
+DELIVERY_TABLE_ID = os.getenv("DELIVERY_TABLE_ID", "")
+HOLIDAY_TABLE_ID = os.getenv("HOLIDAY_TABLE_ID", "")
+PAUSE_TABLE_ID = os.getenv("PAUSE_TABLE_ID", "")
+
+# FastAPI应用
+app = FastAPI(title="配送管理系统API V3.3", version="3.3.1")
+
+# CORS配置
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 用户管理
+USERS_CONFIG = {
+    "users": [
+        {"username": "admin", "password": "admin123", "role": "管理员"},
+        {"username": "user1", "password": "user123", "role": "普通用户"},
+        {"username": "user2", "password": "user123", "role": "普通用户"},
+        {"username": "user3", "password": "user123", "role": "普通用户"}
+    ],
+    "session_expire_hours": 24
+}
+SESSIONS = {}
+
+def get_user_info(username: str) -> Optional[Dict]:
+    """获取用户信息"""
+    for user in USERS_CONFIG.get('users', []):
+        if user['username'] == username:
+            return user
+    return None
+
+def verify_token(token: str) -> Optional[Dict]:
+    """验证token"""
+    if not token or token not in SESSIONS:
+        return None
+    session = SESSIONS[token]
+    if datetime.now() > session['expire_time']:
+        del SESSIONS[token]
+        return None
+    return session
+
+# 辅助函数：提取富文本内容
+def extract_text(value: Any) -> str:
+    """提取富文本字段中的纯文本"""
+    if not value:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        texts = []
+        for item in value:
+            if isinstance(item, dict) and 'text' in item:
+                texts.append(item['text'])
+            elif isinstance(item, str):
+                texts.append(item)
+        return ''.join(texts).strip()
+    return str(value).strip()
+
+# 辅助函数：提取多选字段选项列表
+def extract_multi_select(value: Any) -> List[str]:
+    """提取多选字段中的选项列表"""
+    if not value:
+        return []
     
-    <script>
-        // ==================== 配置 ====================
-        const DEFAULT_API_URL = 'https://delivery-system-production-984a.up.railway.app';
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(',') if v.strip()]
+    
+    if isinstance(value, list):
+        options = []
+        for item in value:
+            if isinstance(item, dict) and 'text' in item:
+                options.append(item['text'])
+            elif isinstance(item, str):
+                options.append(item)
+        return options
+    
+    return []
+
+# 辅助函数：提取单选字段值
+def extract_single_select(value: Any) -> str:
+    """提取单选字段中的选项值"""
+    if not value:
+        return ""
+    
+    if isinstance(value, str):
+        return value.strip()
+    
+    if isinstance(value, dict):
+        return value.get('text', '') or value.get('name', '') or ''
+    
+    return str(value).strip()
+
+# 🔴 新增：解析吃餐日历字段（处理多种格式）
+def parse_calendar_field(value: Any) -> Dict:
+    """
+    解析吃餐日历字段，处理多种可能的格式：
+    1. 字符串JSON
+    2. 字典（直接返回）
+    3. 列表（飞书富文本格式，提取text内容后解析）
+    4. None或空（返回空字典）
+    """
+    if not value:
+        return {}
+    
+    # 如果已经是字典，直接返回
+    if isinstance(value, dict):
+        return value
+    
+    # 如果是字符串，尝试解析JSON
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, dict):
+                return parsed
+            elif isinstance(parsed, list):
+                # 如果解析出来是列表，尝试提取文本后再解析
+                text_content = extract_text(parsed)
+                if text_content:
+                    try:
+                        inner_parsed = json.loads(text_content)
+                        if isinstance(inner_parsed, dict):
+                            return inner_parsed
+                    except:
+                        pass
+                return {}
+        except json.JSONDecodeError:
+            # JSON解析失败，尝试其他方式
+            return {}
+    
+    # 如果是列表（飞书富文本格式）
+    if isinstance(value, list):
+        # 提取文本内容
+        text_content = extract_text(value)
+        if text_content:
+            try:
+                parsed = json.loads(text_content)
+                if isinstance(parsed, dict):
+                    return parsed
+            except:
+                pass
+        return {}
+    
+    # 其他情况，返回空字典
+    logger.warning(f"未知的日历字段格式: {type(value)}")
+    return {}
+
+# 辅助函数：日期转时间戳（毫秒）
+def date_to_timestamp(date_value) -> int:
+    """将日期转换为飞书时间戳（毫秒）"""
+    if isinstance(date_value, datetime):
+        return int(date_value.timestamp() * 1000)
+    elif isinstance(date_value, str):
+        dt = datetime.strptime(date_value, "%Y-%m-%d")
+        return int(dt.timestamp() * 1000)
+    elif isinstance(date_value, (int, float)):
+        return int(date_value)
+    return 0
+
+# 辅助函数：解析日期（修复时区问题）
+def parse_date(date_value) -> Optional[date]:
+    """解析飞书日期字段，返回date对象（本地时间）"""
+    if not date_value:
+        return None
+    
+    try:
+        if isinstance(date_value, (int, float)):
+            ts = date_value / 1000
+            dt = datetime.fromtimestamp(ts)
+            return dt.date()
+        elif isinstance(date_value, str):
+            for fmt in ["%Y-%m-%d", "%Y/%m/%d", "%Y年%m月%d日"]:
+                try:
+                    dt = datetime.strptime(date_value, fmt)
+                    return dt.date()
+                except:
+                    continue
+        return None
+    except Exception as e:
+        logger.error(f"日期解析失败: {date_value}, {e}")
+        return None
+
+# 飞书API
+def get_feishu_token():
+    """获取飞书access token"""
+    if not FEISHU_APP_ID or not FEISHU_APP_SECRET:
+        logger.error("❌ 飞书配置缺失")
+        return None
+    
+    url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
+    data = {
+        "app_id": FEISHU_APP_ID,
+        "app_secret": FEISHU_APP_SECRET
+    }
+    
+    try:
+        response = requests.post(url, json=data, timeout=10)
+        result = response.json()
         
-        // ==================== 全局变量 ====================
-        let API_URL = localStorage.getItem('delivery_api_url') || DEFAULT_API_URL;
-        let TOKEN = localStorage.getItem('delivery_token') || '';
-        let currentCustomerData = null;
-        let currentCalendarMonth = new Date();
-        let ganttData = null;
+        if result.get("code") == 0:
+            token = result.get("tenant_access_token")
+            logger.info(f"✅ 成功获取飞书token")
+            return token
+        else:
+            logger.error(f"❌ 获取飞书token失败: {result}")
+            return None
+    except Exception as e:
+        logger.error(f"❌ 获取飞书token异常: {e}")
+        return None
+
+def query_bitable_records(table_id: str, filter_condition: Dict = None):
+    """查询多维表格记录"""
+    if not BITABLE_APP_TOKEN or not table_id:
+        logger.error(f"❌ 配置缺失")
+        return []
+    
+    token = get_feishu_token()
+    if not token:
+        return []
+    
+    url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records/search"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {"automatic_fields": False}
+    if filter_condition:
+        body["filter"] = filter_condition
+    
+    all_records = []
+    has_more = True
+    page_token = None
+    
+    while has_more:
+        if page_token:
+            body["page_token"] = page_token
         
-        // ==================== 初始化 ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
-            document.getElementById('apiUrlInput').value = API_URL;
-            document.getElementById('currentApiUrl').textContent = API_URL;
+        try:
+            response = requests.post(url, headers=headers, json=body, timeout=30)
+            result = response.json()
             
-            checkAuth();
-        });
+            if result.get("code") == 0:
+                data = result.get("data", {})
+                records = data.get("items", [])
+                all_records.extend(records)
+                has_more = data.get("has_more", False)
+                page_token = data.get("page_token")
+            else:
+                logger.error(f"❌ 查询失败: {result}")
+                break
+        except Exception as e:
+            logger.error(f"❌ 查询异常: {e}")
+            break
+    
+    logger.info(f"✅ 查询到 {len(all_records)} 条记录")
+    return all_records
+
+def update_bitable_record(table_id: str, record_id: str, fields: Dict) -> tuple:
+    """更新多维表格记录"""
+    if not BITABLE_APP_TOKEN or not table_id or not record_id:
+        return False, "配置缺失"
+    
+    token = get_feishu_token()
+    if not token:
+        return False, "获取token失败"
+    
+    url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records/{record_id}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {"fields": fields}
+    
+    try:
+        response = requests.put(url, headers=headers, json=body, timeout=10)
+        result = response.json()
         
-        async function checkAuth() {
-            if (!TOKEN) return;
+        if result.get("code") == 0:
+            logger.info(f"✅ 更新成功")
+            return True, ""
+        else:
+            error_msg = f"错误码{result.get('code')}: {result.get('msg')}"
+            logger.error(f"❌ 更新失败: {error_msg}")
+            return False, error_msg
+    except Exception as e:
+        logger.error(f"❌ 更新异常: {e}")
+        return False, str(e)
+
+def create_bitable_record(table_id: str, fields: Dict) -> tuple:
+    """创建多维表格记录"""
+    if not BITABLE_APP_TOKEN or not table_id:
+        return False, "配置缺失"
+    
+    token = get_feishu_token()
+    if not token:
+        return False, "获取token失败"
+    
+    url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {"fields": fields}
+    
+    try:
+        response = requests.post(url, headers=headers, json=body, timeout=10)
+        result = response.json()
+        
+        if result.get("code") == 0:
+            logger.info(f"✅ 创建成功")
+            return True, ""
+        else:
+            error_msg = f"错误码{result.get('code')}: {result.get('msg')}"
+            logger.error(f"❌ 创建失败: {error_msg}")
+            return False, error_msg
+    except Exception as e:
+        logger.error(f"❌ 创建异常: {e}")
+        return False, str(e)
+
+def delete_bitable_records(table_id: str, record_ids: List[str]) -> bool:
+    """批量删除多维表格记录"""
+    if not BITABLE_APP_TOKEN or not table_id or not record_ids:
+        return False
+    
+    token = get_feishu_token()
+    if not token:
+        return False
+    
+    url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BITABLE_APP_TOKEN}/tables/{table_id}/records/batch_delete"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    body = {"records": record_ids}
+    
+    try:
+        response = requests.post(url, headers=headers, json=body, timeout=10)
+        result = response.json()
+        
+        if result.get("code") == 0:
+            logger.info(f"✅ 删除成功")
+            return True
+        else:
+            logger.error(f"❌ 删除失败: {result}")
+            return False
+    except Exception as e:
+        logger.error(f"❌ 删除异常: {e}")
+        return False
+
+# 辅助函数：获取客户暂停日期列表
+def get_customer_pause_dates(customer_name: str, pause_records_all: List[Dict]) -> List[date]:
+    """获取指定客户的暂停日期列表"""
+    pause_dates = []
+    
+    for record in pause_records_all:
+        fields = record.get('fields', {})
+        record_customer = extract_text(fields.get('客户姓名'))
+        
+        if record_customer != customer_name:
+            continue
+        
+        # 处理暂停单天字段
+        pause_day_fields = []
+        for field_name in fields.keys():
+            if '暂停单天' in field_name or '暂停单日' in field_name:
+                pause_day_fields.append(field_name)
+        
+        for field_name in pause_day_fields:
+            pause_day = fields.get(field_name)
+            if pause_day:
+                pause_date = parse_date(pause_day)
+                if pause_date:
+                    pause_dates.append(pause_date)
+        
+        # 处理暂停区间字段
+        j = 1
+        while True:
+            start_date = (
+                fields.get(f'暂停区间{j}开始') or 
+                fields.get(f'暂停区间 {j}开始') or
+                fields.get(f'暂停区间{j} 开始') or
+                fields.get(f'暂停区间 {j} 开始')
+            )
+            end_date = (
+                fields.get(f'暂停区间{j}结束') or 
+                fields.get(f'暂停区间 {j}结束') or
+                fields.get(f'暂停区间{j} 结束') or
+                fields.get(f'暂停区间 {j} 结束')
+            )
             
-            try {
-                const response = await fetch(`${API_URL}/api/verify`, {
-                    headers: { 'Authorization': `Bearer ${TOKEN}` }
-                });
-                const data = await response.json();
+            if not start_date or not end_date:
+                break
+            
+            start = parse_date(start_date)
+            end = parse_date(end_date)
+            
+            if start and end:
+                current = start
+                while current <= end:
+                    pause_dates.append(current)
+                    current += timedelta(days=1)
+            
+            j += 1
+    
+    return pause_dates
+
+# 辅助函数：获取公共假期列表
+def get_holiday_dates() -> List[date]:
+    """获取公共假期列表"""
+    holiday_records = query_bitable_records(HOLIDAY_TABLE_ID)
+    holiday_dates = []
+    
+    for record in holiday_records:
+        fields = record.get('fields', {})
+        holiday_date = (
+            fields.get('日期') or 
+            fields.get('假期日期') or 
+            fields.get('节假日') or
+            fields.get('日期时间')
+        )
+        if holiday_date:
+            parsed_date = parse_date(holiday_date)
+            if parsed_date:
+                holiday_dates.append(parsed_date)
+                logger.info(f"📅 解析假期日期: {holiday_date} -> {parsed_date}")
+    
+    logger.info(f"✅ 共解析到 {len(holiday_dates)} 个假期日期: {holiday_dates}")
+    return holiday_dates
+
+# 🔴 核心函数：生成吃餐日历
+def generate_meal_calendar(
+    customer_name: str,
+    start_date: date,
+    pause_dates: List[date],
+    holiday_dates: List[date],
+    existing_calendar: Optional[Dict] = None
+) -> Dict:
+    """生成吃餐日历"""
+    calendar = {}
+    
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    end_date = start_date + timedelta(days=90)
+    
+    current = start_date
+    
+    while current <= end_date:
+        date_str = current.strftime("%Y-%m-%d")
+        
+        if existing_calendar and date_str in existing_calendar:
+            existing_record = existing_calendar[date_str]
+            if isinstance(existing_record, dict) and existing_record.get('source') == 'calendar':
+                calendar[date_str] = existing_record
+                current += timedelta(days=1)
+                continue
+        
+        is_pause = current in pause_dates
+        is_holiday = current in holiday_dates
+        
+        if is_pause:
+            calendar[date_str] = {"qty": 0, "status": "paused", "source": "system"}
+        elif is_holiday:
+            calendar[date_str] = {"qty": 0, "status": "holiday", "source": "system"}
+        elif current <= yesterday:
+            calendar[date_str] = {"qty": 1, "status": "delivered", "source": "calendar"}
+        else:
+            calendar[date_str] = {"qty": 1, "status": "pending", "source": "system"}
+        
+        current += timedelta(days=1)
+    
+    return calendar
+
+# 辅助函数：同步配送记录到吃餐日历
+def sync_delivery_to_calendar(customer_name: str, calendar: Dict, delivery_records_all: List[Dict]) -> Dict:
+    """将配送记录表的确认状态同步到吃餐日历"""
+    
+    for record in delivery_records_all:
+        fields = record.get('fields', {})
+        record_customer = extract_text(fields.get('客户姓名'))
+        
+        if record_customer != customer_name:
+            continue
+        
+        delivery_date = parse_date(fields.get('配送日期'))
+        if not delivery_date:
+            continue
+        
+        date_str = delivery_date.strftime("%Y-%m-%d")
+        
+        confirm_status = fields.get('确认状态', '')
+        if isinstance(confirm_status, dict):
+            status_text = confirm_status.get('text', '')
+        else:
+            status_text = extract_text(confirm_status)
+        
+        if status_text == '已确认':
+            delivery_qty = fields.get('配送数量', 1)
+            calendar[date_str] = {
+                "qty": delivery_qty,
+                "status": "delivered",
+                "source": "delivery"
+            }
+    
+    return calendar
+
+# 辅助函数：从日历计算已吃餐数
+def calculate_eaten_meals_from_calendar(calendar: Any) -> int:
+    """从吃餐日历计算已吃餐数（昨天及以前的配送数量总和）"""
+    # 首先确保calendar是字典
+    if not calendar:
+        return 0
+    
+    if not isinstance(calendar, dict):
+        logger.warning(f"日历数据不是字典类型: {type(calendar)}")
+        return 0
+    
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    
+    eaten = 0
+    for date_str, info in calendar.items():
+        try:
+            if not isinstance(info, dict):
+                continue
+            record_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            if record_date <= yesterday:
+                eaten += info.get('qty', 0)
+        except Exception as e:
+            logger.debug(f"跳过无效日期: {date_str}, {e}")
+            continue
+    
+    return eaten
+
+# ==================== API路由 ====================
+
+@app.get("/")
+async def root():
+    """根路径"""
+    return {
+        "message": "配送管理系统API V3.3.1 (全面修复版)",
+        "features": [
+            "修复日期计算：从起送日期当天开始",
+            "修复假期日期解析：正确处理时区",
+            "修复单选字段：使用正确格式",
+            "修复日历字段解析：处理列表格式",
+            "支持过往日期配送记录",
+            "甘特图视图：显示所有客户配送状态"
+        ]
+    }
+
+@app.post("/api/login")
+async def login(request: Request):
+    """用户登录"""
+    try:
+        data = await request.json()
+        username = data.get('username', '')
+        password = data.get('password', '')
+        
+        user_info = get_user_info(username)
+        if not user_info or user_info['password'] != password:
+            raise HTTPException(status_code=401, detail="用户名或密码错误")
+        
+        token = secrets.token_urlsafe(32)
+        SESSIONS[token] = {
+            'username': username,
+            'role': user_info['role'],
+            'expire_time': datetime.now() + timedelta(hours=USERS_CONFIG['session_expire_hours'])
+        }
+        
+        return {"success": True, "token": token, "role": user_info['role']}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/logout")
+async def logout(request: Request):
+    """用户登出"""
+    auth_header = request.headers.get('Authorization', '')
+    token = auth_header.replace('Bearer ', '') if auth_header else ''
+    if token in SESSIONS:
+        del SESSIONS[token]
+    return {"success": True}
+
+@app.get("/api/verify")
+async def verify(request: Request):
+    """验证token"""
+    auth_header = request.headers.get('Authorization', '')
+    token = auth_header.replace('Bearer ', '') if auth_header else ''
+    session = verify_token(token)
+    if not session:
+        raise HTTPException(status_code=401, detail="无效的token")
+    return {"success": True, "username": session['username'], "role": session['role']}
+
+@app.post("/run")
+async def run_workflow(request: Request):
+    """执行工作流"""
+    try:
+        data = await request.json()
+        workflow_type = data.get('workflow_type')
+        
+        if workflow_type == 'generate_calendar':
+            return await generate_customer_calendar()
+        elif workflow_type == 'generate_delivery':
+            delivery_date = data.get('delivery_date')
+            return await generate_delivery_records(delivery_date)
+        elif workflow_type == 'confirm_delivery':
+            delivery_date = data.get('delivery_date')
+            return await confirm_delivery_records(delivery_date)
+        elif workflow_type == 'recalculate_eaten':
+            return await recalculate_eaten_meals()
+        elif workflow_type == 'update_single_calendar':
+            return await update_single_customer_calendar(data)
+        elif workflow_type == 'run_all':
+            return await run_all_operations()
+        elif workflow_type == 'get_customers':
+            return await get_customers_list()
+        elif workflow_type == 'get_customer_calendar':
+            return await get_customer_calendar_data(data.get('customer_name'))
+        elif workflow_type == 'get_gantt_data':
+            return await get_gantt_data()
+        else:
+            return {"success": False, "message": f"未知的工作流类型: {workflow_type}"}
+    
+    except Exception as e:
+        logger.error(f"❌ 工作流执行失败: {e}", exc_info=True)
+        return {"success": False, "message": f"执行失败: {str(e)}"}
+
+async def generate_customer_calendar():
+    """为所有客户生成吃餐日历"""
+    try:
+        logger.info("=" * 60)
+        logger.info("开始生成客户吃餐日历...")
+        
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        if not customers:
+            return {"success": False, "message": "查询客户数据失败"}
+        
+        pause_records_all = query_bitable_records(PAUSE_TABLE_ID)
+        holiday_dates = get_holiday_dates()
+        delivery_records_all = query_bitable_records(DELIVERY_TABLE_ID)
+        
+        debug_info = []
+        updated_count = 0
+        
+        for customer in customers:
+            fields = customer.get('fields', {})
+            record_id = customer.get('record_id')
+            customer_name = extract_text(fields.get('客户姓名'))
+            
+            if not customer_name:
+                continue
+            
+            start_date = parse_date(fields.get('起送日期'))
+            
+            if not start_date:
+                debug_info.append(f"⚠️ {customer_name}: 起送日期未填写，跳过")
+                continue
+            
+            pause_dates = get_customer_pause_dates(customer_name, pause_records_all)
+            
+            # 🔴 使用新的解析函数
+            existing_calendar = parse_calendar_field(fields.get('吃餐日历'))
+            
+            calendar = generate_meal_calendar(
+                customer_name, start_date,
+                pause_dates, holiday_dates, existing_calendar
+            )
+            
+            calendar = sync_delivery_to_calendar(customer_name, calendar, delivery_records_all)
+            
+            update_success, error_msg = update_bitable_record(
+                CUSTOMER_TABLE_ID, record_id,
+                {"吃餐日历": json.dumps(calendar, ensure_ascii=False)}
+            )
+            
+            if update_success:
+                eaten_count = calculate_eaten_meals_from_calendar(calendar)
+                update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": eaten_count})
                 
-                if (data.success) {
-                    showMainPage(data.username, data.role);
-                }
-            } catch (e) {
-                console.log('Token验证失败');
+                debug_info.append(f"✅ {customer_name}: 生成日历（起送{start_date}，已吃{eaten_count}餐）")
+                updated_count += 1
+            else:
+                debug_info.append(f"❌ {customer_name}: 更新失败 - {error_msg}")
+        
+        return {
+            "success": True,
+            "message": f"已为 {updated_count} 个客户生成吃餐日历",
+            "data": {"debug_info": debug_info, "updated_count": updated_count}
+        }
+    except Exception as e:
+        logger.error(f"❌ 生成日历失败: {e}", exc_info=True)
+        return {"success": False, "message": f"生成失败: {str(e)}"}
+
+async def update_single_customer_calendar(data: Dict):
+    """修改单个客户的吃餐日历"""
+    try:
+        customer_name = data.get('customer_name')
+        calendar_updates = data.get('calendar_updates', {})
+        
+        if not customer_name:
+            return {"success": False, "message": "请提供客户姓名"}
+        
+        if not calendar_updates:
+            return {"success": False, "message": "请提供日历更新数据"}
+        
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        customer_record = None
+        
+        for c in customers:
+            if extract_text(c.get('fields', {}).get('客户姓名')) == customer_name:
+                customer_record = c
+                break
+        
+        if not customer_record:
+            return {"success": False, "message": f"找不到客户: {customer_name}"}
+        
+        fields = customer_record.get('fields', {})
+        record_id = customer_record.get('record_id')
+        
+        # 🔴 使用新的解析函数
+        calendar = parse_calendar_field(fields.get('吃餐日历'))
+        
+        today = date.today()
+        for date_str, qty in calendar_updates.items():
+            try:
+                record_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            except:
+                continue
+            
+            if record_date >= today:
+                continue
+            
+            calendar[date_str] = {
+                "qty": qty,
+                "status": "delivered" if qty > 0 else "paused",
+                "source": "calendar"
             }
-        }
         
-        function showMainPage(username, role) {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('mainPage').style.display = 'block';
-            document.body.classList.remove('login-body');
-            
-            document.getElementById('userName').textContent = username;
-            document.getElementById('userRole').textContent = role;
-            document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
-            
-            setDefaultDates();
-            loadCustomerList();
-        }
+        update_success, error_msg = update_bitable_record(
+            CUSTOMER_TABLE_ID, record_id,
+            {"吃餐日历": json.dumps(calendar, ensure_ascii=False)}
+        )
         
-        function setDefaultDates() {
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
+        if update_success:
+            eaten_count = calculate_eaten_meals_from_calendar(calendar)
+            update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": eaten_count})
             
-            document.getElementById('generateDate').value = tomorrow.toISOString().split('T')[0];
-            document.getElementById('confirmDate').value = today.toISOString().split('T')[0];
-        }
+            return {
+                "success": True,
+                "message": f"已更新 {customer_name} 的吃餐日历，已吃餐数: {eaten_count}",
+                "data": {"calendar": calendar, "eaten_count": eaten_count}
+            }
+        else:
+            return {"success": False, "message": f"更新失败: {error_msg}"}
+    
+    except Exception as e:
+        logger.error(f"❌ 更新日历失败: {e}", exc_info=True)
+        return {"success": False, "message": f"更新失败: {str(e)}"}
+
+async def recalculate_eaten_meals():
+    """重新计算所有客户的已吃餐数"""
+    try:
+        logger.info("=" * 60)
+        logger.info("开始重新计算已吃餐数...")
         
-        async function loadCustomerList() {
-            try {
-                const response = await fetch(`${API_URL}/run`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${TOKEN}`
-                    },
-                    body: JSON.stringify({ workflow_type: 'get_customers' })
-                });
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        if not customers:
+            return {"success": False, "message": "查询客户数据失败"}
+        
+        debug_info = []
+        updated_count = 0
+        
+        for customer in customers:
+            fields = customer.get('fields', {})
+            record_id = customer.get('record_id')
+            customer_name = extract_text(fields.get('客户姓名'))
+            
+            if not customer_name:
+                continue
+            
+            # 🔴 使用新的解析函数
+            calendar = parse_calendar_field(fields.get('吃餐日历'))
+            
+            if not calendar:
+                continue
+            
+            eaten_count = calculate_eaten_meals_from_calendar(calendar)
+            
+            current_eaten = fields.get('已吃餐数', 0)
+            if eaten_count != current_eaten:
+                update_success, error_msg = update_bitable_record(
+                    CUSTOMER_TABLE_ID, record_id,
+                    {"已吃餐数": eaten_count}
+                )
                 
-                const data = await response.json();
-                if (data.success && data.data && data.data.customers) {
-                    const select = document.getElementById('calendarCustomer');
-                    select.innerHTML = '<option value="">-- 请选择客户 --</option>';
-                    
-                    data.data.customers.forEach(c => {
-                        const option = document.createElement('option');
-                        option.value = c.name;
-                        option.textContent = `${c.name} (剩余${c.remaining}餐)`;
-                        select.appendChild(option);
-                    });
-                }
-            } catch (e) {
-                console.log('加载客户列表失败');
-            }
-        }
+                if update_success:
+                    debug_info.append(f"✅ {customer_name}: {current_eaten} → {eaten_count}")
+                    updated_count += 1
+                else:
+                    debug_info.append(f"❌ {customer_name}: 更新失败 - {error_msg}")
         
-        // ==================== 登录相关 ====================
-        async function handleLogin(e) {
-            e.preventDefault();
+        return {
+            "success": True,
+            "message": f"已更新 {updated_count} 个客户的已吃餐数",
+            "data": {"debug_info": debug_info, "updated_count": updated_count}
+        }
+    except Exception as e:
+        logger.error(f"❌ 计算失败: {e}", exc_info=True)
+        return {"success": False, "message": f"计算失败: {str(e)}"}
+
+async def generate_delivery_records(delivery_date: str):
+    """生成配送记录"""
+    try:
+        if not delivery_date:
+            return {"success": False, "message": "请提供配送日期"}
+        
+        logger.info("=" * 60)
+        logger.info(f"开始生成配送记录: {delivery_date}")
+        
+        try:
+            selected_date = datetime.strptime(delivery_date, "%Y-%m-%d").date()
+        except:
+            return {"success": False, "message": "日期格式错误，请使用 YYYY-MM-DD 格式"}
+        
+        old_records = query_bitable_records(DELIVERY_TABLE_ID)
+        to_delete = []
+        
+        for record in old_records:
+            fields = record.get('fields', {})
+            record_date = parse_date(fields.get('配送日期'))
+            if record_date == selected_date:
+                to_delete.append(record.get('record_id'))
+        
+        if to_delete:
+            delete_bitable_records(DELIVERY_TABLE_ID, to_delete)
+            logger.info(f"✅ 删除 {len(to_delete)} 条旧记录")
+        
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        holiday_dates = get_holiday_dates()
+        pause_records_all = query_bitable_records(PAUSE_TABLE_ID)
+        
+        debug_info = []
+        created_count = 0
+        skipped_count = 0
+        
+        for customer in customers:
+            fields = customer.get('fields', {})
+            customer_name = extract_text(fields.get('客户姓名'))
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            if not customer_name:
+                continue
             
-            if (!username || !password) {
-                alert('请输入用户名和密码');
-                return;
+            start_date = parse_date(fields.get('起送日期'))
+            total_meals = fields.get('总餐数', 0)
+            
+            if not start_date:
+                continue
+            
+            # 🔴 使用新的解析函数
+            calendar = parse_calendar_field(fields.get('吃餐日历'))
+            
+            eaten_count = calculate_eaten_meals_from_calendar(calendar)
+            remaining = total_meals - eaten_count
+            
+            skip_reason = None
+            
+            if selected_date < start_date:
+                skip_reason = "未到起送日期"
+            elif remaining <= 0:
+                skip_reason = "已吃完所有餐数"
+            
+            if skip_reason:
+                debug_info.append(f"⏭️ {customer_name}: {skip_reason}")
+                skipped_count += 1
+                continue
+            
+            is_holiday = selected_date in holiday_dates
+            pause_dates = get_customer_pause_dates(customer_name, pause_records_all)
+            is_pause = selected_date in pause_dates
+            
+            if is_holiday:
+                debug_info.append(f"📅 {customer_name}: 假期")
+                skipped_count += 1
+                continue
+            
+            if is_pause:
+                debug_info.append(f"⏸️ {customer_name}: 暂停日")
+                skipped_count += 1
+                continue
+            
+            jikou_raw = fields.get('忌口')
+            jikou_options = extract_multi_select(jikou_raw)
+            if jikou_options:
+                jikou_value = [{"text": opt} for opt in jikou_options]
+            else:
+                jikou_value = []
+            
+            jialiang_raw = fields.get('加量')
+            jialiang_text = extract_single_select(jialiang_raw) if jialiang_raw else ""
+            if jialiang_text:
+                jialiang_value = {"text": jialiang_text}
+            else:
+                jialiang_value = None
+            
+            confirm_status_value = {"text": "未确认"}
+            
+            is_last_day = remaining == 1
+            
+            delivery_fields = {
+                "配送日期": date_to_timestamp(delivery_date),
+                "客户姓名": customer_name,
+                "手机号": extract_text(fields.get('手机号')),
+                "配送地址": extract_text(fields.get('配送地址')),
+                "配送数量": 1,
+                "明天是否最后一天": is_last_day,
+                "确认状态": confirm_status_value
             }
             
-            document.getElementById('loginBtn').disabled = true;
+            if jikou_value:
+                delivery_fields["忌口"] = jikou_value
             
-            try {
-                const response = await fetch(`${API_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
+            if jialiang_value:
+                delivery_fields["加量"] = jialiang_value
+            
+            remark = extract_text(fields.get('备注'))
+            if remark:
+                delivery_fields["备注"] = remark
+            
+            success, error_msg = create_bitable_record(DELIVERY_TABLE_ID, delivery_fields)
+            
+            if success:
+                debug_info.append(f"✅ {customer_name}: 生成配送记录")
+                created_count += 1
+            else:
+                debug_info.append(f"❌ {customer_name}: 创建失败 - {error_msg}")
+        
+        return {
+            "success": True,
+            "message": f"已生成 {created_count} 条配送记录（跳过 {skipped_count} 条）",
+            "data": {"debug_info": debug_info, "created_count": created_count}
+        }
+    except Exception as e:
+        logger.error(f"❌ 生成失败: {e}", exc_info=True)
+        return {"success": False, "message": f"生成失败: {str(e)}"}
+
+async def confirm_delivery_records(delivery_date: str):
+    """批量确认配送记录"""
+    try:
+        if not delivery_date:
+            return {"success": False, "message": "请提供配送日期"}
+        
+        logger.info("=" * 60)
+        logger.info(f"开始确认配送记录: {delivery_date}")
+        
+        try:
+            selected_date = datetime.strptime(delivery_date, "%Y-%m-%d").date()
+        except:
+            return {"success": False, "message": "日期格式错误"}
+        
+        delivery_records = query_bitable_records(DELIVERY_TABLE_ID)
+        
+        debug_info = []
+        confirmed_count = 0
+        customers_to_update = {}
+        
+        for record in delivery_records:
+            fields = record.get('fields', {})
+            record_id = record.get('record_id')
+            
+            record_date = parse_date(fields.get('配送日期'))
+            if record_date != selected_date:
+                continue
+            
+            customer_name = extract_text(fields.get('客户姓名'))
+            if not customer_name:
+                continue
+            
+            confirm_status = fields.get('确认状态', '')
+            if isinstance(confirm_status, dict):
+                status_text = confirm_status.get('text', '')
+            else:
+                status_text = extract_text(confirm_status)
+            
+            if status_text == '已确认':
+                debug_info.append(f"⏭️ {customer_name}: 已确认过")
+                continue
+            
+            delivery_qty = fields.get('配送数量', 1)
+            
+            update_success, error_msg = update_bitable_record(
+                DELIVERY_TABLE_ID, record_id,
+                {"确认状态": {"text": "已确认"}}
+            )
+            
+            if update_success:
+                debug_info.append(f"✅ {customer_name}: 确认配送{delivery_qty}份")
+                confirmed_count += 1
                 
-                const data = await response.json();
+                if customer_name not in customers_to_update:
+                    customers_to_update[customer_name] = 0
+                customers_to_update[customer_name] += delivery_qty
+            else:
+                debug_info.append(f"❌ {customer_name}: 确认失败 - {error_msg}")
+        
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        
+        for customer in customers:
+            fields = customer.get('fields', {})
+            record_id = customer.get('record_id')
+            customer_name = extract_text(fields.get('客户姓名'))
+            
+            if customer_name not in customers_to_update:
+                continue
+            
+            # 🔴 使用新的解析函数
+            calendar = parse_calendar_field(fields.get('吃餐日历'))
+            
+            date_str = selected_date.strftime("%Y-%m-%d")
+            calendar[date_str] = {
+                "qty": customers_to_update[customer_name],
+                "status": "delivered",
+                "source": "delivery"
+            }
+            
+            update_bitable_record(CUSTOMER_TABLE_ID, record_id, {
+                "吃餐日历": json.dumps(calendar, ensure_ascii=False)
+            })
+            
+            eaten_count = calculate_eaten_meals_from_calendar(calendar)
+            update_bitable_record(CUSTOMER_TABLE_ID, record_id, {"已吃餐数": eaten_count})
+        
+        return {
+            "success": True,
+            "message": f"已确认 {confirmed_count} 条配送记录",
+            "data": {"debug_info": debug_info, "confirmed_count": confirmed_count}
+        }
+    except Exception as e:
+        logger.error(f"❌ 确认失败: {e}", exc_info=True)
+        return {"success": False, "message": f"确认失败: {str(e)}"}
+
+async def run_all_operations():
+    """一键执行所有操作"""
+    try:
+        results = []
+        
+        result1 = await generate_customer_calendar()
+        results.append(f"1️⃣ 生成吃餐日历: {result1['message']}")
+        
+        result2 = await recalculate_eaten_meals()
+        results.append(f"2️⃣ 计算已吃餐数: {result2['message']}")
+        
+        return {
+            "success": True,
+            "message": "所有操作已完成",
+            "data": {"debug_info": results}
+        }
+    except Exception as e:
+        return {"success": False, "message": f"执行失败: {str(e)}"}
+
+async def get_customers_list():
+    """获取客户列表"""
+    try:
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        if not customers:
+            return {"success": False, "message": "查询客户数据失败"}
+        
+        customer_list = []
+        for customer in customers:
+            fields = customer.get('fields', {})
+            customer_name = extract_text(fields.get('客户姓名'))
+            if customer_name:
+                # 🔴 使用新的解析函数
+                calendar = parse_calendar_field(fields.get('吃餐日历'))
                 
-                if (data.success) {
-                    TOKEN = data.token;
-                    localStorage.setItem('delivery_token', TOKEN);
-                    showMainPage(username, data.role);
-                } else {
-                    alert(data.detail || '登录失败');
-                }
-            } catch (error) {
-                alert('登录失败: ' + error.message);
-            } finally {
-                document.getElementById('loginBtn').disabled = false;
-            }
-        }
-        
-        function saveApiUrl() {
-            const url = document.getElementById('apiUrlInput').value.trim();
-            if (!url) {
-                alert('请输入API地址');
-                return;
-            }
-            
-            let cleanUrl = url.replace(/\/$/, '');
-            if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-                cleanUrl = 'https://' + cleanUrl;
-            }
-            
-            localStorage.setItem('delivery_api_url', cleanUrl);
-            API_URL = cleanUrl;
-            
-            document.getElementById('currentApiUrl').textContent = cleanUrl;
-            document.getElementById('apiUrlInput').value = cleanUrl;
-            alert('✅ API地址已保存: ' + cleanUrl);
-        }
-        
-        function logout() {
-            fetch(`${API_URL}/api/logout`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${TOKEN}` }
-            }).catch(e => console.log('Logout error:', e));
-            
-            localStorage.removeItem('delivery_token');
-            TOKEN = '';
-            
-            document.getElementById('loginPage').style.display = 'block';
-            document.getElementById('mainPage').style.display = 'none';
-            document.body.classList.add('login-body');
-        }
-        
-        // ==================== 工作流调用 ====================
-        async function callWorkflow(type, extraData = {}) {
-            const response = await fetch(`${API_URL}/run`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${TOKEN}`
-                },
-                body: JSON.stringify({ workflow_type: type, ...extraData })
-            });
-            
-            return await response.json();
-        }
-        
-        function showLoading(elementId) {
-            const el = document.getElementById(elementId);
-            el.className = 'result loading';
-            el.textContent = '⏳ 处理中...';
-        }
-        
-        function showResult(elementId, data) {
-            const el = document.getElementById(elementId);
-            if (data.success) {
-                el.className = 'result success';
-                el.innerHTML = `<strong>✅ ${data.message}</strong>`;
-                if (data.data && data.data.debug_info) {
-                    el.innerHTML += `<br><small>${data.data.debug_info.slice(0, 3).join('<br>')}</small>`;
-                }
-            } else {
-                el.className = 'result error';
-                el.innerHTML = `<strong>❌ ${data.message}</strong>`;
-            }
-        }
-        
-        // ==================== 业务功能 ====================
-        async function syncAll() {
-            if (!confirm('确认同步所有数据吗？这将重新生成所有客户的吃餐日历。')) return;
-            
-            showLoading('syncResult');
-            
-            try {
-                const results = [];
+                eaten_count = calculate_eaten_meals_from_calendar(calendar)
+                total_meals = fields.get('总餐数', 0)
                 
-                results.push('1️⃣ 生成吃餐日历...');
-                const r1 = await callWorkflow('generate_calendar');
-                results.push(r1.success ? '✅ 完成' : '❌ 失败');
-                
-                results.push('2️⃣ 计算已吃餐数...');
-                const r2 = await callWorkflow('recalculate_eaten');
-                results.push(r2.success ? '✅ 完成' : '❌ 失败');
-                
-                const div = document.getElementById('syncResult');
-                div.className = 'result success';
-                div.innerHTML = `<strong>✅ 同步完成</strong><br>${results.join('<br>')}`;
-                
-                loadCustomerList();
-            } catch (error) {
-                document.getElementById('syncResult').className = 'result error';
-                document.getElementById('syncResult').textContent = '❌ 错误: ' + error.message;
+                customer_list.append({
+                    "name": customer_name,
+                    "start_date": str(parse_date(fields.get('起送日期'))) if parse_date(fields.get('起送日期')) else None,
+                    "total_meals": total_meals,
+                    "eaten_count": eaten_count,
+                    "remaining": total_meals - eaten_count
+                })
+        
+        return {
+            "success": True,
+            "message": f"获取到 {len(customer_list)} 个客户",
+            "data": {"customers": customer_list}
+        }
+    except Exception as e:
+        logger.error(f"❌ 获取客户列表失败: {e}", exc_info=True)
+        return {"success": False, "message": f"获取失败: {str(e)}"}
+
+async def get_customer_calendar_data(customer_name: str):
+    """获取单个客户的日历数据"""
+    try:
+        if not customer_name:
+            return {"success": False, "message": "请提供客户姓名"}
+        
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        pause_records_all = query_bitable_records(PAUSE_TABLE_ID)
+        holiday_dates = get_holiday_dates()
+        
+        customer_record = None
+        for c in customers:
+            if extract_text(c.get('fields', {}).get('客户姓名')) == customer_name:
+                customer_record = c
+                break
+        
+        if not customer_record:
+            return {"success": False, "message": f"找不到客户: {customer_name}"}
+        
+        fields = customer_record.get('fields', {})
+        
+        # 🔴 使用新的解析函数
+        calendar = parse_calendar_field(fields.get('吃餐日历'))
+        
+        pause_dates = get_customer_pause_dates(customer_name, pause_records_all)
+        pause_dates_str = [str(d) for d in pause_dates]
+        
+        holiday_dates_str = [str(d) for d in holiday_dates]
+        
+        eaten_count = calculate_eaten_meals_from_calendar(calendar)
+        total_meals = fields.get('总餐数', 0)
+        
+        return {
+            "success": True,
+            "message": "获取成功",
+            "data": {
+                "customer_name": customer_name,
+                "start_date": str(parse_date(fields.get('起送日期'))) if parse_date(fields.get('起送日期')) else None,
+                "total_meals": total_meals,
+                "eaten_count": eaten_count,
+                "remaining": total_meals - eaten_count,
+                "calendar": calendar,
+                "pause_dates": pause_dates_str,
+                "holiday_dates": holiday_dates_str
             }
         }
+    except Exception as e:
+        logger.error(f"❌ 获取日历数据失败: {e}", exc_info=True)
+        return {"success": False, "message": f"获取失败: {str(e)}"}
+
+async def get_gantt_data():
+    """获取甘特图数据
+    
+    返回所有客户的配送状态，用于前端甘特图显示
+    每个客户一行，包含：总餐数、剩余餐数、起送日、暂停日、假期、配送数量
+    """
+    try:
+        logger.info("=" * 60)
+        logger.info("开始获取甘特图数据...")
         
-        async function generateRecords() {
-            const date = document.getElementById('generateDate').value;
-            if (!date) {
-                alert('请选择配送日期');
-                return;
-            }
-            
-            showLoading('generateResult');
-            
-            try {
-                const result = await callWorkflow('generate_delivery', { delivery_date: date });
-                showResult('generateResult', result);
-            } catch (error) {
-                document.getElementById('generateResult').className = 'result error';
-                document.getElementById('generateResult').textContent = '❌ 错误: ' + error.message;
-            }
-        }
+        customers = query_bitable_records(CUSTOMER_TABLE_ID)
+        if not customers:
+            return {"success": False, "message": "查询客户数据失败"}
         
-        async function confirmDelivery() {
-            const date = document.getElementById('confirmDate').value;
-            if (!date) {
-                alert('请选择配送日期');
-                return;
-            }
-            
-            if (!confirm(`确认 ${date} 的所有配送记录吗？`)) return;
-            
-            showLoading('confirmResult');
-            
-            try {
-                const result = await callWorkflow('confirm_delivery', { delivery_date: date });
-                showResult('confirmResult', result);
-            } catch (error) {
-                document.getElementById('confirmResult').className = 'result error';
-                document.getElementById('confirmResult').textContent = '❌ 错误: ' + error.message;
-            }
-        }
+        pause_records_all = query_bitable_records(PAUSE_TABLE_ID)
+        holiday_dates = get_holiday_dates()
+        holiday_dates_str = [str(d) for d in holiday_dates]
         
-        // ==================== 甘特图功能 ====================
-        async function loadGantt() {
-            showLoading('ganttResult');
+        gantt_data = []
+        today = date.today()
+        
+        for customer in customers:
+            fields = customer.get('fields', {})
+            customer_name = extract_text(fields.get('客户姓名'))
             
-            try {
-                const result = await callWorkflow('get_gantt_data');
+            if not customer_name:
+                continue
+            
+            start_date = parse_date(fields.get('起送日期'))
+            if not start_date:
+                continue
+            
+            total_meals = fields.get('总餐数', 0)
+            
+            # 获取暂停日期
+            pause_dates = get_customer_pause_dates(customer_name, pause_records_all)
+            pause_dates_str = [str(d) for d in pause_dates]
+            
+            # 🔴 使用新的解析函数
+            calendar = parse_calendar_field(fields.get('吃餐日历'))
+            
+            # 计算已吃餐数
+            eaten_count = calculate_eaten_meals_from_calendar(calendar)
+            remaining = total_meals - eaten_count
+            
+            # 构建每日配送详情（用于甘特图显示）
+            daily_details = []
+            if start_date:
+                # 显示从起送日期到今天后30天的数据
+                end_display = today + timedelta(days=30)
+                current = start_date
                 
-                if (result.success) {
-                    ganttData = result.data;
-                    renderGantt();
-                    document.getElementById('ganttContainer').style.display = 'block';
-                    document.getElementById('calendarContainer').style.display = 'none';
-                    
-                    const resultEl = document.getElementById('ganttResult');
-                    resultEl.className = 'result success';
-                    resultEl.textContent = '✅ 甘特图已加载';
-                } else {
-                    showResult('ganttResult', result);
-                }
-            } catch (error) {
-                document.getElementById('ganttResult').className = 'result error';
-                document.getElementById('ganttResult').textContent = '❌ 错误: ' + error.message;
-            }
-        }
-        
-        function renderGantt() {
-            if (!ganttData || !ganttData.gantt_data) return;
-            
-            const container = document.getElementById('ganttTable');
-            
-            // 找到日期范围
-            let allDates = [];
-            ganttData.gantt_data.forEach(customer => {
-                if (customer.daily_details) {
-                    customer.daily_details.forEach(day => {
-                        if (!allDates.includes(day.date)) {
-                            allDates.push(day.date);
-                        }
-                    });
-                }
-            });
-            allDates.sort();
-            
-            // 只显示最近30天
-            const today = new Date();
-            const displayDates = [];
-            for (let i = -10; i <= 20; i++) {
-                const d = new Date(today);
-                d.setDate(d.getDate() + i);
-                displayDates.push(d.toISOString().split('T')[0]);
-            }
-            
-            // 生成表格
-            let html = '<table class="gantt-table"><thead><tr>';
-            html += '<th class="customer-col">客户</th>';
-            html += '<th class="info-col">总餐</th>';
-            html += '<th class="info-col">剩余</th>';
-            html += '<th class="info-col">状态</th>';
-            
-            // 日期表头
-            displayDates.forEach(dateStr => {
-                const d = new Date(dateStr);
-                const weekday = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-                const isToday = dateStr === ganttData.today;
-                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                html += `<th class="${isToday ? 'today-col' : ''}" style="${isWeekend ? 'background: #fef3c7;' : ''}">${d.getDate()}<br><small>${weekday}</small></th>`;
-            });
-            html += '</tr></thead><tbody>';
-            
-            // 数据行
-            ganttData.gantt_data.forEach(customer => {
-                // 状态样式
-                let statusClass = 'active';
-                let statusText = customer.delivery_status;
-                if (statusText === '已结束') {
-                    statusClass = 'ended';
-                } else if (statusText === '未开始') {
-                    statusClass = 'pending';
-                }
-                
-                html += '<tr>';
-                html += `<td class="customer-col">${customer.customer_name}</td>`;
-                html += `<td class="info-col">${customer.total_meals}</td>`;
-                html += `<td class="info-col">${customer.remaining}</td>`;
-                html += `<td class="info-col"><span class="status-badge ${statusClass}">${statusText}</span></td>`;
-                
-                // 每日数据
-                displayDates.forEach(dateStr => {
-                    const isToday = dateStr === ganttData.today;
-                    const dayInfo = customer.daily_details ? customer.daily_details.find(d => d.date === dateStr) : null;
-                    
-                    let cellClass = isToday ? 'today-col' : '';
-                    let dayHtml = '';
-                    
-                    if (dayInfo) {
-                        let dayClass = 'empty';
-                        let dayText = '';
-                        
-                        if (dayInfo.is_start) {
-                            dayClass = 'start';
-                            dayText = '🚀';
-                        } else if (dayInfo.is_pause) {
-                            dayClass = 'pause';
-                            dayText = '⏸';
-                        } else if (dayInfo.is_holiday) {
-                            dayClass = 'holiday';
-                            dayText = '🎉';
-                        } else if (dayInfo.qty > 0) {
-                            if (dayInfo.is_past) {
-                                dayClass = 'delivered';
-                                dayText = dayInfo.qty;
-                            } else {
-                                dayClass = 'pending';
-                                dayText = dayInfo.qty + '?';
-                            }
-                        } else {
-                            dayText = '-';
-                        }
-                        
-                        dayHtml = `<span class="gantt-day ${dayClass}">${dayText}</span>`;
+                while current <= end_display:
+                    date_str = current.strftime("%Y-%m-%d")
+                    day_info = {
+                        "date": date_str,
+                        "weekday": current.weekday(),  # 0=周一, 6=周日
+                        "is_start": current == start_date,
+                        "is_pause": current in pause_dates,
+                        "is_holiday": current in holiday_dates,
+                        "is_today": current == today,
+                        "is_past": current < today,
+                        "qty": 0,
+                        "status": "normal"
                     }
                     
-                    html += `<td class="${cellClass}">${dayHtml}</td>`;
-                });
-                
-                html += '</tr>';
-            });
+                    # 判断状态
+                    if day_info["is_start"]:
+                        day_info["status"] = "start"
+                    elif day_info["is_pause"]:
+                        day_info["status"] = "pause"
+                    elif day_info["is_holiday"]:
+                        day_info["status"] = "holiday"
+                    elif date_str in calendar:
+                        info = calendar[date_str]
+                        if isinstance(info, dict):
+                            day_info["qty"] = info.get('qty', 0)
+                            day_info["status"] = info.get('status', 'normal')
+                    
+                    daily_details.append(day_info)
+                    current += timedelta(days=1)
             
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-        
-        function refreshGantt() {
-            loadGantt();
-        }
-        
-        function closeGantt() {
-            document.getElementById('ganttContainer').style.display = 'none';
-        }
-        
-        // ==================== 日历视图功能 ====================
-        async function loadCustomerCalendar() {
-            const customerName = document.getElementById('calendarCustomer').value;
-            if (!customerName) {
-                alert('请选择客户');
-                return;
-            }
+            # 计算配送状态
+            if remaining <= 0:
+                delivery_status = "已结束"
+            elif today < start_date:
+                delivery_status = "未开始"
+            else:
+                delivery_status = "配送中"
             
-            showLoading('calendarViewResult');
-            
-            try {
-                const response = await fetch(`${API_URL}/run`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${TOKEN}`
-                    },
-                    body: JSON.stringify({
-                        workflow_type: 'get_customer_calendar',
-                        customer_name: customerName
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    currentCustomerData = data.data;
-                    currentCalendarMonth = new Date();
-                    
-                    document.getElementById('calendarTitle').textContent = `${customerName} 的吃餐日历`;
-                    document.getElementById('calendarContainer').style.display = 'block';
-                    document.getElementById('ganttContainer').style.display = 'none';
-                    
-                    document.getElementById('infoStartDate').textContent = currentCustomerData.start_date || '-';
-                    document.getElementById('infoEaten').textContent = 
-                        `${currentCustomerData.eaten_count || 0}/${currentCustomerData.total_meals || 0}`;
-                    document.getElementById('infoRemaining').textContent = 
-                        currentCustomerData.remaining || 0;
-                    
-                    renderCalendar();
-                    
-                    const resultEl = document.getElementById('calendarViewResult');
-                    resultEl.className = 'result success';
-                    resultEl.textContent = '✅ 日历已加载';
-                } else {
-                    showResult('calendarViewResult', data);
-                }
-            } catch (error) {
-                document.getElementById('calendarViewResult').className = 'result error';
-                document.getElementById('calendarViewResult').textContent = '❌ 错误: ' + error.message;
+            gantt_data.append({
+                "customer_name": customer_name,
+                "start_date": str(start_date),
+                "total_meals": total_meals,
+                "eaten_count": eaten_count,
+                "remaining": remaining,
+                "delivery_status": delivery_status,
+                "pause_dates": pause_dates_str,
+                "daily_details": daily_details
+            })
+        
+        return {
+            "success": True,
+            "message": f"获取到 {len(gantt_data)} 个客户的甘特图数据",
+            "data": {
+                "gantt_data": gantt_data,
+                "holiday_dates": holiday_dates_str,
+                "today": str(today)
             }
         }
-        
-        function renderCalendar() {
-            if (!currentCustomerData) return;
-            
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            
-            const year = currentCalendarMonth.getFullYear();
-            const month = currentCalendarMonth.getMonth();
-            
-            document.getElementById('calendarTitle').textContent = 
-                `${currentCustomerData.customer_name} 的吃餐日历 - ${year}年${month + 1}月`;
-            
-            const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-            weekdays.forEach(day => {
-                const header = document.createElement('div');
-                header.className = 'calendar-day-header';
-                header.textContent = day;
-                grid.appendChild(header);
-            });
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDayOfWeek = (firstDay.getDay() + 6) % 7;
-            
-            for (let i = 0; i < startDayOfWeek; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.className = 'calendar-day empty';
-                grid.appendChild(emptyDay);
-            }
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            for (let day = 1; day <= lastDay.getDate(); day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const currentDate = new Date(year, month, day);
-                currentDate.setHours(0, 0, 0, 0);
-                
-                const dayEl = document.createElement('div');
-                dayEl.className = 'calendar-day';
-                
-                if (currentDate.getTime() === today.getTime()) {
-                    dayEl.classList.add('today');
-                }
-                
-                const dayNumber = document.createElement('div');
-                dayNumber.className = 'day-number';
-                dayNumber.textContent = day;
-                dayEl.appendChild(dayNumber);
-                
-                const dayBadge = document.createElement('div');
-                dayBadge.className = 'day-badge';
-                
-                let hasBadge = false;
-                let badgeText = '';
-                let badgeClass = '';
-                let currentQty = 1;
-                
-                if (currentCustomerData.start_date === dateStr) {
-                    badgeText = '🚀 起送';
-                    badgeClass = 'start';
-                    hasBadge = true;
-                }
-                else if (currentCustomerData.pause_dates && currentCustomerData.pause_dates.includes(dateStr)) {
-                    badgeText = '⏸ 暂停';
-                    badgeClass = 'pause';
-                    hasBadge = true;
-                    currentQty = 0;
-                }
-                else if (currentCustomerData.holiday_dates && currentCustomerData.holiday_dates.includes(dateStr)) {
-                    badgeText = '🎉 假期';
-                    badgeClass = 'holiday';
-                    hasBadge = true;
-                    currentQty = 0;
-                }
-                else if (currentCustomerData.calendar && currentCustomerData.calendar[dateStr]) {
-                    const info = currentCustomerData.calendar[dateStr];
-                    const qty = info.qty || 0;
-                    currentQty = qty;
-                    
-                    if (currentDate < today) {
-                        badgeText = qty;
-                        badgeClass = 'delivered';
-                        hasBadge = true;
-                    } else {
-                        badgeText = qty + '?';
-                        badgeClass = 'pending';
-                        hasBadge = true;
-                    }
-                }
-                else if (currentDate >= today && currentCustomerData.start_date && dateStr >= currentCustomerData.start_date) {
-                    badgeText = '1?';
-                    badgeClass = 'pending';
-                    hasBadge = true;
-                    currentQty = 1;
-                }
-                
-                if (hasBadge) {
-                    dayBadge.classList.add(badgeClass);
-                    dayBadge.textContent = badgeText;
-                    dayEl.appendChild(dayBadge);
-                }
-                
-                if (currentDate < today && currentQty > 0) {
-                    dayEl.onclick = () => selectDateForEdit(dateStr, currentQty);
-                    dayEl.style.cursor = 'pointer';
-                } else {
-                    dayEl.style.cursor = 'default';
-                }
-                
-                grid.appendChild(dayEl);
-            }
-        }
-        
-        function prevMonth() {
-            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1);
-            renderCalendar();
-        }
-        
-        function nextMonth() {
-            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1);
-            renderCalendar();
-        }
-        
-        function closeCalendar() {
-            document.getElementById('calendarContainer').style.display = 'none';
-        }
-        
-        function selectDateForEdit(dateStr, currentQty) {
-            document.getElementById('editDate').value = dateStr;
-            document.getElementById('editQty').value = currentQty || 1;
-            document.getElementById('calendarEdit').classList.add('active');
-        }
-        
-        function cancelCalendarEdit() {
-            document.getElementById('calendarEdit').classList.remove('active');
-        }
-        
-        async function saveCalendarEdit() {
-            const dateStr = document.getElementById('editDate').value;
-            const qty = parseInt(document.getElementById('editQty').value) || 1;
-            const customerName = currentCustomerData.customer_name;
-            
-            if (!confirm(`确认修改 ${customerName} 在 ${dateStr} 的配送数量为 ${qty} 份？`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_URL}/run`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${TOKEN}`
-                    },
-                    body: JSON.stringify({
-                        workflow_type: 'update_single_calendar',
-                        customer_name: customerName,
-                        calendar_updates: { [dateStr]: qty }
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('✅ 修改成功！已吃餐数已更新。');
-                    
-                    if (!currentCustomerData.calendar) {
-                        currentCustomerData.calendar = {};
-                    }
-                    currentCustomerData.calendar[dateStr] = {
-                        qty: qty,
-                        status: qty > 0 ? 'delivered' : 'paused',
-                        source: 'calendar'
-                    };
-                    currentCustomerData.eaten_count = data.data.eaten_count;
-                    currentCustomerData.remaining = currentCustomerData.total_meals - data.data.eaten_count;
-                    
-                    document.getElementById('infoEaten').textContent = 
-                        `${currentCustomerData.eaten_count}/${currentCustomerData.total_meals}`;
-                    document.getElementById('infoRemaining').textContent = currentCustomerData.remaining;
-                    
-                    renderCalendar();
-                    cancelCalendarEdit();
-                    loadCustomerList();
-                } else {
-                    alert('❌ 修改失败: ' + data.message);
-                }
-            } catch (error) {
-                alert('❌ 修改失败: ' + error.message);
-            }
-        }
-    </script>
-</body>
-</html>
+    except Exception as e:
+        logger.error(f"❌ 获取甘特图数据失败: {e}", exc_info=True)
+        return {"success": False, "message": f"获取失败: {str(e)}"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
