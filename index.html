@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍱 配送管理系统 V3.2</title>
+    <title>🍱 配送管理系统 V3.3</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -343,7 +343,7 @@
         
         .calendar-info {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin-bottom: 20px;
             padding: 15px;
@@ -366,7 +366,7 @@
         
         .calendar-legend {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 15px;
             flex-wrap: wrap;
         }
@@ -378,13 +378,13 @@
             color: #666;
         }
         .legend-dot {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 600;
         }
         .legend-dot.start { background: #22c55e; color: white; }
@@ -396,7 +396,7 @@
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
         .calendar-day-header {
             text-align: center;
@@ -408,10 +408,12 @@
         .calendar-day {
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 8px;
-            min-height: 70px;
+            padding: 6px;
+            min-height: 65px;
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
         }
         .calendar-day:hover { 
             background: #f0f9ff; 
@@ -428,26 +430,43 @@
         .calendar-day.today {
             border-color: #3b82f6;
             border-width: 2px;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
         }
         .calendar-day .day-number {
             font-weight: 600;
             color: #333;
-            margin-bottom: 5px;
-        }
-        .calendar-day .day-qty {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
             font-size: 0.9em;
-            font-weight: 600;
-            min-width: 28px;
-            text-align: center;
+            margin-bottom: 4px;
         }
-        .calendar-day .day-qty.start { background: #22c55e; color: white; }
-        .calendar-day .day-qty.pause { background: #f59e0b; color: white; }
-        .calendar-day .day-qty.holiday { background: #ef4444; color: white; }
-        .calendar-day .day-qty.delivered { background: #3b82f6; color: white; }
-        .calendar-day .day-qty.pending { background: #9ca3af; color: white; }
+        .calendar-day .day-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-align: center;
+            margin-top: auto;
+        }
+        .calendar-day .day-badge.start { 
+            background: #22c55e; 
+            color: white; 
+        }
+        .calendar-day .day-badge.pause { 
+            background: #f59e0b; 
+            color: white; 
+        }
+        .calendar-day .day-badge.holiday { 
+            background: #ef4444; 
+            color: white; 
+        }
+        .calendar-day .day-badge.delivered { 
+            background: #3b82f6; 
+            color: white; 
+        }
+        .calendar-day .day-badge.pending { 
+            background: #9ca3af; 
+            color: white; 
+        }
         
         .calendar-edit {
             margin-top: 20px;
@@ -552,7 +571,7 @@
     <div class="login-container" id="loginPage">
         <div class="login-header">
             <h1>🍱 配送管理系统</h1>
-            <p>V3.2 日历视图版</p>
+            <p>V3.3 修复版</p>
         </div>
         
         <form id="loginForm">
@@ -591,8 +610,8 @@
 
         <div class="container">
             <header>
-                <h1>🍱 配送管理系统 V3.2</h1>
-                <p>日历视图 · 可视化管理</p>
+                <h1>🍱 配送管理系统 V3.3</h1>
+                <p>修复版 · 日期计算准确</p>
             </header>
             
             <div class="section-divider">
@@ -615,7 +634,7 @@
                     </div>
                     <div class="tip-box info">
                         <span>💡</span>
-                        <div><strong>执行内容：</strong>生成吃餐日历 → 计算已吃餐数 → 计算结束日期</div>
+                        <div><strong>执行内容：</strong>生成吃餐日历 → 计算已吃餐数</div>
                     </div>
                     <button class="btn-warning" onclick="syncAll()">🔄 一键同步所有数据</button>
                     <div id="syncResult" class="result"></div>
@@ -645,7 +664,7 @@
                     </div>
                     <div class="tip-box info">
                         <span>📌</span>
-                        <div><strong>提示：</strong>选择明天的日期，生成的记录状态为"未确认"</div>
+                        <div><strong>提示：</strong>可选择任何日期，包括过往日期。生成后会覆盖该日期的旧记录。</div>
                     </div>
                     <button class="btn-primary" onclick="generateRecords()">📋 生成配送记录</button>
                     <div id="generateResult" class="result"></div>
@@ -661,18 +680,10 @@
                     </div>
                     <div class="tip-box warning">
                         <span>⚠️</span>
-                        <div><strong>注意：</strong>确认后自动更新已吃餐数和预计结束日期</div>
+                        <div><strong>注意：</strong>确认后自动更新已吃餐数</div>
                     </div>
                     <button class="btn-success" onclick="confirmDelivery()">✅ 批量确认配送</button>
                     <div id="confirmResult" class="result"></div>
-                </div>
-                
-                <!-- 更新甘特图 -->
-                <div class="card">
-                    <h2><span class="step-badge">📊</span> 更新甘特图状态</h2>
-                    <p>更新客户的配送状态字段，用于飞书表格中的甘特图显示。</p>
-                    <button class="btn-info" onclick="updateGantt()">📊 更新甘特图状态</button>
-                    <div id="updateGanttResult" class="result"></div>
                 </div>
             </div>
             
@@ -691,10 +702,6 @@
                     <div class="calendar-info-item">
                         <div class="label">起送日期</div>
                         <div class="value" id="infoStartDate">-</div>
-                    </div>
-                    <div class="calendar-info-item">
-                        <div class="label">预计结束</div>
-                        <div class="value" id="infoEndDate">-</div>
                     </div>
                     <div class="calendar-info-item">
                         <div class="label">已吃/总餐</div>
@@ -722,9 +729,10 @@
                     <span>💡</span>
                     <div>
                         <strong>日历说明：</strong><br>
-                        • 数字（如 1、2）：已确认的配送数量，可点击修改<br>
-                        • 数字+问号（如 1?）：待确认状态，今晚点"批量确认"后生效<br>
-                        • 问号（?）：未来日期，待生成配送记录
+                        • <strong>数字</strong>（如 1、2）：已确认的配送数量，点击可修改<br>
+                        • <strong>数字+?</strong>（如 1?）：待确认状态，需点击"批量确认"后生效<br>
+                        • <strong>起送日</strong>：客户开始配送的第一天<br>
+                        • <strong>暂停日/假期</strong>：不配送
                     </div>
                 </div>
                 
@@ -910,7 +918,7 @@
                     data.data.customers.forEach(c => {
                         const option = document.createElement('option');
                         option.value = c.name;
-                        option.textContent = c.name;
+                        option.textContent = `${c.name} (剩余${c.remaining}餐)`;
                         select.appendChild(option);
                     });
                 }
@@ -1047,10 +1055,6 @@
                 const r2 = await callWorkflow('recalculate_eaten');
                 results.push(r2.success ? '✅ 完成' : '❌ 失败');
                 
-                results.push('3️⃣ 计算结束日期...');
-                const r3 = await callWorkflow('recalculate_end_date');
-                results.push(r3.success ? '✅ 完成' : '❌ 失败');
-                
                 const div = document.getElementById('syncResult');
                 div.className = 'result success';
                 div.innerHTML = `<strong>✅ 同步完成</strong><br>${results.join('<br>')}`;
@@ -1097,17 +1101,6 @@
             }
         }
         
-        async function updateGantt() {
-            showLoading('updateGanttResult');
-            
-            try {
-                const result = await callWorkflow('update_gantt');
-                showResult('updateGanttResult', result);
-            } catch (error) {
-                showErrorResult('updateGanttResult', error);
-            }
-        }
-        
         // ==================== 日历视图功能 ====================
         async function loadCustomerCalendar() {
             const customerName = document.getElementById('calendarCustomer').value;
@@ -1142,11 +1135,10 @@
                     
                     // 显示客户信息
                     document.getElementById('infoStartDate').textContent = currentCustomerData.start_date || '-';
-                    document.getElementById('infoEndDate').textContent = currentCustomerData.end_date || '-';
                     document.getElementById('infoEaten').textContent = 
                         `${currentCustomerData.eaten_count || 0}/${currentCustomerData.total_meals || 0}`;
                     document.getElementById('infoRemaining').textContent = 
-                        (currentCustomerData.total_meals || 0) - (currentCustomerData.eaten_count || 0);
+                        currentCustomerData.remaining || 0;
                     
                     renderCalendar();
                     
@@ -1202,6 +1194,7 @@
             for (let day = 1; day <= lastDay.getDate(); day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const currentDate = new Date(year, month, day);
+                currentDate.setHours(0, 0, 0, 0);
                 
                 const dayEl = document.createElement('div');
                 dayEl.className = 'calendar-day';
@@ -1216,53 +1209,74 @@
                 dayNumber.textContent = day;
                 dayEl.appendChild(dayNumber);
                 
-                // 配送数量/状态
-                const dayQty = document.createElement('div');
-                dayQty.className = 'day-qty';
+                // 配送数量/状态徽章
+                const dayBadge = document.createElement('div');
+                dayBadge.className = 'day-badge';
+                
+                let hasBadge = false;
+                let badgeText = '';
+                let badgeClass = '';
+                let currentQty = 1;
                 
                 // 检查是否是起送日
                 if (currentCustomerData.start_date === dateStr) {
-                    dayQty.classList.add('start');
-                    dayQty.textContent = '🚀';
+                    badgeText = '🚀 起送';
+                    badgeClass = 'start';
+                    hasBadge = true;
                 }
                 // 检查是否是暂停日
                 else if (currentCustomerData.pause_dates && currentCustomerData.pause_dates.includes(dateStr)) {
-                    dayQty.classList.add('pause');
-                    dayQty.textContent = '⏸';
+                    badgeText = '⏸ 暂停';
+                    badgeClass = 'pause';
+                    hasBadge = true;
+                    currentQty = 0;
                 }
                 // 检查是否是假期
                 else if (currentCustomerData.holiday_dates && currentCustomerData.holiday_dates.includes(dateStr)) {
-                    dayQty.classList.add('holiday');
-                    dayQty.textContent = '🎉';
+                    badgeText = '🎉 假期';
+                    badgeClass = 'holiday';
+                    hasBadge = true;
+                    currentQty = 0;
                 }
                 // 检查日历数据
                 else if (currentCustomerData.calendar && currentCustomerData.calendar[dateStr]) {
                     const info = currentCustomerData.calendar[dateStr];
-                    const qty = info.qty;
+                    const qty = info.qty || 0;
+                    currentQty = qty;
                     
                     // 判断是过去还是今天/未来
                     if (currentDate < today) {
                         // 过去的日期：显示数字（已确认）
-                        dayQty.classList.add('delivered');
-                        dayQty.textContent = qty;
+                        badgeText = qty;
+                        badgeClass = 'delivered';
+                        hasBadge = true;
                     } else {
                         // 今天及未来：显示数字+问号（待确认）
-                        dayQty.classList.add('pending');
-                        dayQty.textContent = qty + '?';
+                        badgeText = qty + '?';
+                        badgeClass = 'pending';
+                        hasBadge = true;
                     }
                 }
-                // 今天及未来，没有日历数据的
+                // 今天及未来，没有日历数据但在起送日期之后
                 else if (currentDate >= today && currentCustomerData.start_date && dateStr >= currentCustomerData.start_date) {
-                    dayQty.classList.add('pending');
-                    dayQty.textContent = '?';
+                    badgeText = '1?';
+                    badgeClass = 'pending';
+                    hasBadge = true;
+                    currentQty = 1;
                 }
                 
-                dayEl.appendChild(dayQty);
+                if (hasBadge) {
+                    dayBadge.classList.add(badgeClass);
+                    dayBadge.textContent = badgeText;
+                    dayEl.appendChild(dayBadge);
+                }
                 
-                // 点击事件（只能点击过去的日期）
-                if (currentDate < today) {
-                    const currentQty = dayQty.textContent;
+                // 点击事件（只能点击过去的日期，且是已配送的日期）
+                if (currentDate < today && currentQty > 0) {
                     dayEl.onclick = () => selectDateForEdit(dateStr, currentQty);
+                    dayEl.style.cursor = 'pointer';
+                } else {
+                    dayEl.style.cursor = 'default';
                 }
                 
                 grid.appendChild(dayEl);
@@ -1284,12 +1298,8 @@
         }
         
         function selectDateForEdit(dateStr, currentQty) {
-            if (!currentQty || currentQty === '🚀' || currentQty === '⏸' || currentQty === '🎉') {
-                currentQty = 1;
-            }
-            
             document.getElementById('editDate').value = dateStr;
-            document.getElementById('editQty').value = parseInt(currentQty) || 1;
+            document.getElementById('editQty').value = currentQty || 1;
             document.getElementById('calendarEdit').classList.add('active');
         }
         
@@ -1335,15 +1345,18 @@
                         source: 'calendar'
                     };
                     currentCustomerData.eaten_count = data.data.eaten_count;
+                    currentCustomerData.remaining = currentCustomerData.total_meals - data.data.eaten_count;
                     
                     // 更新显示
                     document.getElementById('infoEaten').textContent = 
                         `${currentCustomerData.eaten_count}/${currentCustomerData.total_meals}`;
-                    document.getElementById('infoRemaining').textContent = 
-                        (currentCustomerData.total_meals || 0) - currentCustomerData.eaten_count;
+                    document.getElementById('infoRemaining').textContent = currentCustomerData.remaining;
                     
                     renderCalendar();
                     cancelCalendarEdit();
+                    
+                    // 刷新客户列表
+                    loadCustomerList();
                 } else {
                     alert('❌ 修改失败: ' + data.message);
                 }
