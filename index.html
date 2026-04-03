@@ -447,26 +447,11 @@
             text-align: center;
             margin-top: auto;
         }
-        .calendar-day .day-badge.start { 
-            background: #22c55e; 
-            color: white; 
-        }
-        .calendar-day .day-badge.pause { 
-            background: #f59e0b; 
-            color: white; 
-        }
-        .calendar-day .day-badge.holiday { 
-            background: #ef4444; 
-            color: white; 
-        }
-        .calendar-day .day-badge.delivered { 
-            background: #3b82f6; 
-            color: white; 
-        }
-        .calendar-day .day-badge.pending { 
-            background: #9ca3af; 
-            color: white; 
-        }
+        .calendar-day .day-badge.start { background: #22c55e; color: white; }
+        .calendar-day .day-badge.pause { background: #f59e0b; color: white; }
+        .calendar-day .day-badge.holiday { background: #ef4444; color: white; }
+        .calendar-day .day-badge.delivered { background: #3b82f6; color: white; }
+        .calendar-day .day-badge.pending { background: #9ca3af; color: white; }
         
         .calendar-edit {
             margin-top: 20px;
@@ -491,6 +476,98 @@
             flex: 1;
             min-width: 150px;
         }
+        
+        /* 甘特图样式 */
+        .gantt-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        .gantt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .gantt-header h3 {
+            font-size: 1.3em;
+            color: #333;
+        }
+        
+        .gantt-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+        .gantt-table th, .gantt-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        .gantt-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+        .gantt-table th.customer-col {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: #f8fafc;
+            min-width: 100px;
+        }
+        .gantt-table td.customer-col {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background: white;
+            text-align: left;
+            font-weight: 600;
+            min-width: 100px;
+        }
+        .gantt-table th.info-col {
+            min-width: 60px;
+        }
+        .gantt-table td.info-col {
+            font-weight: 600;
+        }
+        .gantt-table td.today-col {
+            background: #eff6ff;
+            border-left: 2px solid #3b82f6;
+            border-right: 2px solid #3b82f6;
+        }
+        
+        .gantt-day {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        .gantt-day.start { background: #22c55e; color: white; }
+        .gantt-day.pause { background: #f59e0b; color: white; }
+        .gantt-day.holiday { background: #ef4444; color: white; }
+        .gantt-day.delivered { background: #3b82f6; color: white; }
+        .gantt-day.pending { background: #9ca3af; color: white; }
+        .gantt-day.empty { background: #f3f4f6; color: #9ca3af; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .status-badge.active { background: #dcfce7; color: #166534; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.ended { background: #fee2e2; color: #991b1b; }
         
         /* 流程卡片 */
         .workflow-card {
@@ -537,16 +614,6 @@
             color: #666;
             font-size: 0.95em;
             line-height: 1.5;
-        }
-        .flow-step-code {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 4px 12px;
-            background: #667eea;
-            color: white;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
         }
         
         .footer {
@@ -632,12 +699,16 @@
                             • 新增客户后初始化
                         </div>
                     </div>
-                    <div class="tip-box info">
-                        <span>💡</span>
-                        <div><strong>执行内容：</strong>生成吃餐日历 → 计算已吃餐数</div>
-                    </div>
                     <button class="btn-warning" onclick="syncAll()">🔄 一键同步所有数据</button>
                     <div id="syncResult" class="result"></div>
+                </div>
+                
+                <!-- 查看甘特图 -->
+                <div class="card">
+                    <h2><span class="step-badge">📊</span> 查看甘特图</h2>
+                    <p>查看所有客户的配送状态，一目了然。显示起送日、暂停日、假期、配送数量等。</p>
+                    <button class="btn-info" onclick="loadGantt()">📊 查看甘特图</button>
+                    <div id="ganttResult" class="result"></div>
                 </div>
                 
                 <!-- 日历视图 -->
@@ -662,10 +733,6 @@
                         <label for="generateDate">📅 配送日期：</label>
                         <input type="date" id="generateDate" value="">
                     </div>
-                    <div class="tip-box info">
-                        <span>📌</span>
-                        <div><strong>提示：</strong>可选择任何日期，包括过往日期。生成后会覆盖该日期的旧记录。</div>
-                    </div>
                     <button class="btn-primary" onclick="generateRecords()">📋 生成配送记录</button>
                     <div id="generateResult" class="result"></div>
                 </div>
@@ -678,12 +745,31 @@
                         <label for="confirmDate">📅 配送日期：</label>
                         <input type="date" id="confirmDate" value="">
                     </div>
-                    <div class="tip-box warning">
-                        <span>⚠️</span>
-                        <div><strong>注意：</strong>确认后自动更新已吃餐数</div>
-                    </div>
                     <button class="btn-success" onclick="confirmDelivery()">✅ 批量确认配送</button>
                     <div id="confirmResult" class="result"></div>
+                </div>
+            </div>
+            
+            <!-- 甘特图容器 -->
+            <div id="ganttContainer" class="gantt-container" style="display: none;">
+                <div class="gantt-header">
+                    <h3>📊 客户配送甘特图</h3>
+                    <div>
+                        <button onclick="refreshGantt()">🔄 刷新</button>
+                        <button onclick="closeGantt()" style="background: #f0f0f0; color: #333;">✕ 关闭</button>
+                    </div>
+                </div>
+                
+                <div class="calendar-legend" style="margin-bottom: 15px;">
+                    <div class="legend-item"><div class="legend-dot start">🚀</div> 起送日</div>
+                    <div class="legend-item"><div class="legend-dot pause">⏸</div> 暂停日</div>
+                    <div class="legend-item"><div class="legend-dot holiday">🎉</div> 假期</div>
+                    <div class="legend-item"><div class="legend-dot delivered">1</div> 已配送</div>
+                    <div class="legend-item"><div class="legend-dot pending">1?</div> 待确认</div>
+                </div>
+                
+                <div id="ganttTable" style="overflow-x: auto;">
+                    <!-- 甘特图内容动态生成 -->
                 </div>
             </div>
             
@@ -717,23 +803,12 @@
                     <div class="legend-item"><div class="legend-dot start">🚀</div> 起送日</div>
                     <div class="legend-item"><div class="legend-dot pause">⏸</div> 暂停日</div>
                     <div class="legend-item"><div class="legend-dot holiday">🎉</div> 假期</div>
-                    <div class="legend-item"><div class="legend-dot delivered">1</div> 已确认（过去）</div>
-                    <div class="legend-item"><div class="legend-dot pending">1?</div> 待确认（今天/未来）</div>
+                    <div class="legend-item"><div class="legend-dot delivered">1</div> 已确认</div>
+                    <div class="legend-item"><div class="legend-dot pending">1?</div> 待确认</div>
                 </div>
                 
                 <div class="calendar-grid" id="calendarGrid">
                     <!-- 日历内容动态生成 -->
-                </div>
-                
-                <div class="tip-box info" style="margin-top: 15px; margin-bottom: 15px;">
-                    <span>💡</span>
-                    <div>
-                        <strong>日历说明：</strong><br>
-                        • <strong>数字</strong>（如 1、2）：已确认的配送数量，点击可修改<br>
-                        • <strong>数字+?</strong>（如 1?）：待确认状态，需点击"批量确认"后生效<br>
-                        • <strong>起送日</strong>：客户开始配送的第一天<br>
-                        • <strong>暂停日/假期</strong>：不配送
-                    </div>
                 </div>
                 
                 <div class="calendar-edit" id="calendarEdit">
@@ -749,87 +824,6 @@
                         </div>
                         <button class="btn-warning" onclick="saveCalendarEdit()">💾 保存修改</button>
                         <button class="btn-info" onclick="cancelCalendarEdit()">取消</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section-divider">
-                <span>📖 操作流程说明</span>
-            </div>
-            
-            <!-- 每日操作流程 -->
-            <div class="workflow-card">
-                <h2>🔄 每日操作流程（日常使用）</h2>
-                <div class="flow-steps">
-                    <div class="flow-step">
-                        <div class="flow-step-number">1</div>
-                        <h3>批量确认今天的配送记录</h3>
-                        <p>选择今天的日期，点击"批量确认"，自动更新已吃餐数</p>
-                        <span class="flow-step-code">晚上操作</span>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">2</div>
-                        <h3>生成明天的配送记录</h3>
-                        <p>选择明天的日期，点击"生成配送记录"</p>
-                        <span class="flow-step-code">晚上操作</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第一天流程 -->
-            <div class="workflow-card">
-                <h2>🌟 第一天开始使用（仅首次）</h2>
-                <div class="flow-steps">
-                    <div class="flow-step">
-                        <div class="flow-step-number">1</div>
-                        <h3>填写客户信息</h3>
-                        <p>在飞书表格中填写客户基础信息</p>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">2</div>
-                        <h3>填写暂停表/假期表</h3>
-                        <p>如有需要，填写暂停日期和公共假期</p>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">3</div>
-                        <h3>点击一键同步</h3>
-                        <p>生成所有客户的吃餐日历</p>
-                        <span class="flow-step-code">重要！</span>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">4</div>
-                        <h3>生成今天的配送记录</h3>
-                        <p>选择今天的日期，生成配送记录</p>
-                        <span class="flow-step-code">早上操作</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 修改历史数据 -->
-            <div class="workflow-card">
-                <h2>📝 修改历史数据流程</h2>
-                <div class="flow-steps">
-                    <div class="flow-step">
-                        <div class="flow-step-number">1</div>
-                        <h3>点击"查看客户日历"</h3>
-                        <p>选择要修改的客户，点击"查看日历"</p>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">2</div>
-                        <h3>点击要修改的日期</h3>
-                        <p>在日历中点击过去的日期（昨天及以前）</p>
-                    </div>
-                    
-                    <div class="flow-step">
-                        <div class="flow-step-number">3</div>
-                        <h3>修改配送数量</h3>
-                        <p>输入新的配送数量，点击"保存修改"</p>
-                        <span class="flow-step-code">自动更新已吃餐数</span>
                     </div>
                 </div>
             </div>
@@ -850,6 +844,7 @@
         let TOKEN = localStorage.getItem('delivery_token') || '';
         let currentCustomerData = null;
         let currentCalendarMonth = new Date();
+        let ganttData = null;
         
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', () => {
@@ -1024,18 +1019,12 @@
                 el.className = 'result success';
                 el.innerHTML = `<strong>✅ ${data.message}</strong>`;
                 if (data.data && data.data.debug_info) {
-                    el.innerHTML += `<br><small>${data.data.debug_info.slice(0, 5).join('<br>')}</small>`;
+                    el.innerHTML += `<br><small>${data.data.debug_info.slice(0, 3).join('<br>')}</small>`;
                 }
             } else {
                 el.className = 'result error';
                 el.innerHTML = `<strong>❌ ${data.message}</strong>`;
             }
-        }
-        
-        function showErrorResult(elementId, error) {
-            const el = document.getElementById(elementId);
-            el.className = 'result error';
-            el.innerHTML = `<strong>❌ 错误:</strong> ${error.message}`;
         }
         
         // ==================== 业务功能 ====================
@@ -1061,7 +1050,8 @@
                 
                 loadCustomerList();
             } catch (error) {
-                showErrorResult('syncResult', error);
+                document.getElementById('syncResult').className = 'result error';
+                document.getElementById('syncResult').textContent = '❌ 错误: ' + error.message;
             }
         }
         
@@ -1078,7 +1068,8 @@
                 const result = await callWorkflow('generate_delivery', { delivery_date: date });
                 showResult('generateResult', result);
             } catch (error) {
-                showErrorResult('generateResult', error);
+                document.getElementById('generateResult').className = 'result error';
+                document.getElementById('generateResult').textContent = '❌ 错误: ' + error.message;
             }
         }
         
@@ -1097,8 +1088,149 @@
                 const result = await callWorkflow('confirm_delivery', { delivery_date: date });
                 showResult('confirmResult', result);
             } catch (error) {
-                showErrorResult('confirmResult', error);
+                document.getElementById('confirmResult').className = 'result error';
+                document.getElementById('confirmResult').textContent = '❌ 错误: ' + error.message;
             }
+        }
+        
+        // ==================== 甘特图功能 ====================
+        async function loadGantt() {
+            showLoading('ganttResult');
+            
+            try {
+                const result = await callWorkflow('get_gantt_data');
+                
+                if (result.success) {
+                    ganttData = result.data;
+                    renderGantt();
+                    document.getElementById('ganttContainer').style.display = 'block';
+                    document.getElementById('calendarContainer').style.display = 'none';
+                    
+                    const resultEl = document.getElementById('ganttResult');
+                    resultEl.className = 'result success';
+                    resultEl.textContent = '✅ 甘特图已加载';
+                } else {
+                    showResult('ganttResult', result);
+                }
+            } catch (error) {
+                document.getElementById('ganttResult').className = 'result error';
+                document.getElementById('ganttResult').textContent = '❌ 错误: ' + error.message;
+            }
+        }
+        
+        function renderGantt() {
+            if (!ganttData || !ganttData.gantt_data) return;
+            
+            const container = document.getElementById('ganttTable');
+            
+            // 找到日期范围
+            let allDates = [];
+            ganttData.gantt_data.forEach(customer => {
+                if (customer.daily_details) {
+                    customer.daily_details.forEach(day => {
+                        if (!allDates.includes(day.date)) {
+                            allDates.push(day.date);
+                        }
+                    });
+                }
+            });
+            allDates.sort();
+            
+            // 只显示最近30天
+            const today = new Date();
+            const displayDates = [];
+            for (let i = -10; i <= 20; i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() + i);
+                displayDates.push(d.toISOString().split('T')[0]);
+            }
+            
+            // 生成表格
+            let html = '<table class="gantt-table"><thead><tr>';
+            html += '<th class="customer-col">客户</th>';
+            html += '<th class="info-col">总餐</th>';
+            html += '<th class="info-col">剩余</th>';
+            html += '<th class="info-col">状态</th>';
+            
+            // 日期表头
+            displayDates.forEach(dateStr => {
+                const d = new Date(dateStr);
+                const weekday = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+                const isToday = dateStr === ganttData.today;
+                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                html += `<th class="${isToday ? 'today-col' : ''}" style="${isWeekend ? 'background: #fef3c7;' : ''}">${d.getDate()}<br><small>${weekday}</small></th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            // 数据行
+            ganttData.gantt_data.forEach(customer => {
+                // 状态样式
+                let statusClass = 'active';
+                let statusText = customer.delivery_status;
+                if (statusText === '已结束') {
+                    statusClass = 'ended';
+                } else if (statusText === '未开始') {
+                    statusClass = 'pending';
+                }
+                
+                html += '<tr>';
+                html += `<td class="customer-col">${customer.customer_name}</td>`;
+                html += `<td class="info-col">${customer.total_meals}</td>`;
+                html += `<td class="info-col">${customer.remaining}</td>`;
+                html += `<td class="info-col"><span class="status-badge ${statusClass}">${statusText}</span></td>`;
+                
+                // 每日数据
+                displayDates.forEach(dateStr => {
+                    const isToday = dateStr === ganttData.today;
+                    const dayInfo = customer.daily_details ? customer.daily_details.find(d => d.date === dateStr) : null;
+                    
+                    let cellClass = isToday ? 'today-col' : '';
+                    let dayHtml = '';
+                    
+                    if (dayInfo) {
+                        let dayClass = 'empty';
+                        let dayText = '';
+                        
+                        if (dayInfo.is_start) {
+                            dayClass = 'start';
+                            dayText = '🚀';
+                        } else if (dayInfo.is_pause) {
+                            dayClass = 'pause';
+                            dayText = '⏸';
+                        } else if (dayInfo.is_holiday) {
+                            dayClass = 'holiday';
+                            dayText = '🎉';
+                        } else if (dayInfo.qty > 0) {
+                            if (dayInfo.is_past) {
+                                dayClass = 'delivered';
+                                dayText = dayInfo.qty;
+                            } else {
+                                dayClass = 'pending';
+                                dayText = dayInfo.qty + '?';
+                            }
+                        } else {
+                            dayText = '-';
+                        }
+                        
+                        dayHtml = `<span class="gantt-day ${dayClass}">${dayText}</span>`;
+                    }
+                    
+                    html += `<td class="${cellClass}">${dayHtml}</td>`;
+                });
+                
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function refreshGantt() {
+            loadGantt();
+        }
+        
+        function closeGantt() {
+            document.getElementById('ganttContainer').style.display = 'none';
         }
         
         // ==================== 日历视图功能 ====================
@@ -1132,8 +1264,8 @@
                     
                     document.getElementById('calendarTitle').textContent = `${customerName} 的吃餐日历`;
                     document.getElementById('calendarContainer').style.display = 'block';
+                    document.getElementById('ganttContainer').style.display = 'none';
                     
-                    // 显示客户信息
                     document.getElementById('infoStartDate').textContent = currentCustomerData.start_date || '-';
                     document.getElementById('infoEaten').textContent = 
                         `${currentCustomerData.eaten_count || 0}/${currentCustomerData.total_meals || 0}`;
@@ -1149,7 +1281,8 @@
                     showResult('calendarViewResult', data);
                 }
             } catch (error) {
-                showErrorResult('calendarViewResult', error);
+                document.getElementById('calendarViewResult').className = 'result error';
+                document.getElementById('calendarViewResult').textContent = '❌ 错误: ' + error.message;
             }
         }
         
@@ -1162,11 +1295,9 @@
             const year = currentCalendarMonth.getFullYear();
             const month = currentCalendarMonth.getMonth();
             
-            // 更新标题
             document.getElementById('calendarTitle').textContent = 
                 `${currentCustomerData.customer_name} 的吃餐日历 - ${year}年${month + 1}月`;
             
-            // 星期标题
             const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
             weekdays.forEach(day => {
                 const header = document.createElement('div');
@@ -1175,19 +1306,16 @@
                 grid.appendChild(header);
             });
             
-            // 计算月份第一天和最后一天
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
-            const startDayOfWeek = (firstDay.getDay() + 6) % 7; // 调整为周一开始
+            const startDayOfWeek = (firstDay.getDay() + 6) % 7;
             
-            // 空白天数
             for (let i = 0; i < startDayOfWeek; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.className = 'calendar-day empty';
                 grid.appendChild(emptyDay);
             }
             
-            // 日期
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
@@ -1203,13 +1331,11 @@
                     dayEl.classList.add('today');
                 }
                 
-                // 日期数字
                 const dayNumber = document.createElement('div');
                 dayNumber.className = 'day-number';
                 dayNumber.textContent = day;
                 dayEl.appendChild(dayNumber);
                 
-                // 配送数量/状态徽章
                 const dayBadge = document.createElement('div');
                 dayBadge.className = 'day-badge';
                 
@@ -1218,46 +1344,38 @@
                 let badgeClass = '';
                 let currentQty = 1;
                 
-                // 检查是否是起送日
                 if (currentCustomerData.start_date === dateStr) {
                     badgeText = '🚀 起送';
                     badgeClass = 'start';
                     hasBadge = true;
                 }
-                // 检查是否是暂停日
                 else if (currentCustomerData.pause_dates && currentCustomerData.pause_dates.includes(dateStr)) {
                     badgeText = '⏸ 暂停';
                     badgeClass = 'pause';
                     hasBadge = true;
                     currentQty = 0;
                 }
-                // 检查是否是假期
                 else if (currentCustomerData.holiday_dates && currentCustomerData.holiday_dates.includes(dateStr)) {
                     badgeText = '🎉 假期';
                     badgeClass = 'holiday';
                     hasBadge = true;
                     currentQty = 0;
                 }
-                // 检查日历数据
                 else if (currentCustomerData.calendar && currentCustomerData.calendar[dateStr]) {
                     const info = currentCustomerData.calendar[dateStr];
                     const qty = info.qty || 0;
                     currentQty = qty;
                     
-                    // 判断是过去还是今天/未来
                     if (currentDate < today) {
-                        // 过去的日期：显示数字（已确认）
                         badgeText = qty;
                         badgeClass = 'delivered';
                         hasBadge = true;
                     } else {
-                        // 今天及未来：显示数字+问号（待确认）
                         badgeText = qty + '?';
                         badgeClass = 'pending';
                         hasBadge = true;
                     }
                 }
-                // 今天及未来，没有日历数据但在起送日期之后
                 else if (currentDate >= today && currentCustomerData.start_date && dateStr >= currentCustomerData.start_date) {
                     badgeText = '1?';
                     badgeClass = 'pending';
@@ -1271,7 +1389,6 @@
                     dayEl.appendChild(dayBadge);
                 }
                 
-                // 点击事件（只能点击过去的日期，且是已配送的日期）
                 if (currentDate < today && currentQty > 0) {
                     dayEl.onclick = () => selectDateForEdit(dateStr, currentQty);
                     dayEl.style.cursor = 'pointer';
@@ -1335,7 +1452,6 @@
                 if (data.success) {
                     alert('✅ 修改成功！已吃餐数已更新。');
                     
-                    // 更新本地数据
                     if (!currentCustomerData.calendar) {
                         currentCustomerData.calendar = {};
                     }
@@ -1347,15 +1463,12 @@
                     currentCustomerData.eaten_count = data.data.eaten_count;
                     currentCustomerData.remaining = currentCustomerData.total_meals - data.data.eaten_count;
                     
-                    // 更新显示
                     document.getElementById('infoEaten').textContent = 
                         `${currentCustomerData.eaten_count}/${currentCustomerData.total_meals}`;
                     document.getElementById('infoRemaining').textContent = currentCustomerData.remaining;
                     
                     renderCalendar();
                     cancelCalendarEdit();
-                    
-                    // 刷新客户列表
                     loadCustomerList();
                 } else {
                     alert('❌ 修改失败: ' + data.message);
